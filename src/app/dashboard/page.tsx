@@ -82,15 +82,8 @@ export default function DashboardPage() {
         // Get user's assistants (PROPERLY FILTERED BY USER)
         const { data: userAssistants, error: assistantsError } = await supabase
           .from('assistants')
-          .select(`
-            *,
-            businesses!inner(
-              id,
-              name,
-              user_id
-            )
-          `)
-          .eq('businesses.user_id', user.id)
+          .select('*')
+          .eq('user_id', user.id)
 
         if (assistantsError) {
           console.error('Error fetching assistants:', assistantsError)

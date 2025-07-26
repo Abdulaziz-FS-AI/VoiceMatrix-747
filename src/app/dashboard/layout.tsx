@@ -173,7 +173,7 @@ export default function DashboardLayout({
               </div>
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-medium text-text-primary truncate">
-                  {user.user_metadata?.business_name || 'Business'}
+                  {user.email?.split('@')[0] || 'User'}
                   {adminStatus.isAdmin && (
                     <span className="ml-2 text-xs bg-primary-blue text-white px-2 py-1 rounded-full">
                       ADMIN

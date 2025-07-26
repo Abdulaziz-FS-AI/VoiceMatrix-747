@@ -10,15 +10,14 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [businessName, setBusinessName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [step, setStep] = useState(1) // 1: Account, 2: Business, 3: Confirmation
+  const [step, setStep] = useState(1) // 1: Account, 2: Confirmation
   
   const router = useRouter()
   const supabase = createBrowserClient()
 
-  const validateStep1 = () => {
+  const validateForm = () => {
     if (!email || !password || !confirmPassword) {
       setError('All fields are required')
       return false
@@ -34,38 +33,19 @@ export default function SignUpPage() {
     return true
   }
 
-  const validateStep2 = () => {
-    if (!businessName.trim()) {
-      setError('Business name is required')
-      return false
-    }
-    return true
-  }
-
-  const handleNextStep = () => {
-    setError('')
+  const handleSignUp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     
-    if (step === 1 && validateStep1()) {
-      setStep(2)
-    } else if (step === 2 && validateStep2()) {
-      handleSignUp()
-    }
-  }
+    if (!validateForm()) return
 
-  const handleSignUp = async () => {
     setLoading(true)
     setError('')
 
     try {
-      // 1. Create auth user
+      // Create auth user - profile will be auto-created by trigger
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            business_name: businessName.trim(),
-          },
-        },
       })
 
       if (error) {
@@ -74,24 +54,7 @@ export default function SignUpPage() {
       }
 
       if (data.user) {
-        // 2. Wait a moment for profile trigger to complete
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // 3. Create business profile
-        const { error: businessError } = await supabase
-          .from('businesses')
-          .insert({
-            user_id: data.user.id,
-            name: businessName.trim(),
-          })
-
-        if (businessError) {
-          console.error('Business creation error:', businessError)
-          setError('Account created but business setup failed. Please contact support.')
-          return
-        }
-
-        setStep(3) // Show confirmation
+        setStep(2) // Show confirmation
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -122,7 +85,7 @@ export default function SignUpPage() {
     }
   }
 
-  if (step === 3) {
+  if (step === 2) {
     return (
       <div className="min-h-screen bg-bg-dark flex items-center justify-center p-8">
         <div className="max-w-md w-full text-center">
@@ -146,7 +109,7 @@ export default function SignUpPage() {
               </div>
               <div className="flex items-start space-x-3">
                 <span className="text-primary-blue mt-1">2.</span>
-                <span className="text-text-secondary">Complete your business setup</span>
+                <span className="text-text-secondary">Access your dashboard</span>
               </div>
               <div className="flex items-start space-x-3">
                 <span className="text-primary-blue mt-1">3.</span>
@@ -158,7 +121,7 @@ export default function SignUpPage() {
           <p className="text-text-disabled text-sm">
             Didn't receive the email?{' '}
             <button
-              onClick={handleSignUp}
+              onClick={() => handleSignUp()}
               className="text-primary-blue hover:text-indigo-light micro-transition"
             >
               Resend confirmation
@@ -221,23 +184,8 @@ export default function SignUpPage() {
               />
             </div>
             
-            {/* Progress Indicator */}
-            <div className="flex items-center justify-center space-x-2 mb-6">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
-                step >= 1 ? 'bg-primary-blue text-white' : 'bg-border-subtle text-text-disabled'
-              }`}>
-                1
-              </div>
-              <div className={`w-8 h-1 ${step >= 2 ? 'bg-primary-blue' : 'bg-border-subtle'}`}></div>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
-                step >= 2 ? 'bg-primary-blue text-white' : 'bg-border-subtle text-text-disabled'
-              }`}>
-                2
-              </div>
-            </div>
-
             <h2 className="text-h2 text-text-primary mb-2">
-              {step === 1 ? 'Create your account' : 'Tell us about your business'}
+              Create your account
             </h2>
             <p className="text-text-secondary">
               Already have an account?{' '}
@@ -253,70 +201,79 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {step === 1 && (
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="input w-full"
-                  placeholder="Enter your email"
-                />
-              </div>
+          <form onSubmit={handleSignUp} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="input w-full"
+                placeholder="Enter your email"
+              />
+            </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="input w-full"
-                  placeholder="Create a password"
-                />
-              </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="input w-full"
+                placeholder="Create a password"
+              />
+            </div>
 
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-primary mb-2">
-                  Confirm password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="input w-full"
-                  placeholder="Confirm your password"
-                />
-              </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-primary mb-2">
+                Confirm password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="input w-full"
+                placeholder="Confirm your password"
+              />
+            </div>
 
-              <button
-                onClick={handleNextStep}
-                disabled={loading}
-                className="btn-primary w-full"
-              >
-                Continue
-              </button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border-subtle" />
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating account...
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-bg-dark text-text-secondary">Or continue with</span>
-                </div>
-              </div>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          </form>
 
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border-subtle" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-bg-dark text-text-secondary">Or continue with</span>
+              </div>
+            </div>
+
+            <div className="mt-6">
               <button
                 onClick={handleGoogleSignUp}
                 disabled={loading}
@@ -343,52 +300,7 @@ export default function SignUpPage() {
                 Continue with Google
               </button>
             </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="businessName" className="block text-sm font-medium text-text-primary mb-2">
-                  Business name
-                </label>
-                <input
-                  id="businessName"
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  required
-                  className="input w-full"
-                  placeholder="Enter your business name"
-                />
-                <p className="text-text-disabled text-xs mt-2">
-                  This will be used to personalize your AI receptionist
-                </p>
-              </div>
-
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setStep(1)}
-                  className="btn-secondary flex-1"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleNextStep}
-                  disabled={loading}
-                  className="btn-primary flex-1"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Creating...
-                    </div>
-                  ) : (
-                    'Create Account'
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

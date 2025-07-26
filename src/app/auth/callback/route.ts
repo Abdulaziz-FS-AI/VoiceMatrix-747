@@ -20,19 +20,7 @@ export async function GET(request: NextRequest) {
       }
 
       if (data.user) {
-        // Check if user has a business profile
-        const { data: business, error: businessError } = await supabase
-          .from('businesses')
-          .select('id')
-          .eq('user_id', data.user.id)
-          .single()
-
-        // If no business profile exists (OAuth signup), redirect to onboarding
-        if (businessError || !business) {
-          return NextResponse.redirect(new URL('/onboarding', request.url))
-        }
-
-        // Redirect to intended destination
+        // User authenticated successfully - redirect to dashboard
         return NextResponse.redirect(new URL(redirectTo, request.url))
       }
     } catch (error) {
