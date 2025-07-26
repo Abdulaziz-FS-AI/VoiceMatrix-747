@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerComponentClient } from '@/lib/supabase'
-import { VapiClient, generateSystemPrompt, getFirstMessage, getAdvancedFunctions } from '@/lib/vapi'
+import { VapiClient } from '@/lib/vapi'
+import { VoiceMatrixPromptSystem } from '@/lib/assistant-prompts'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,24 +13,34 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { businessId, persona, transferPhoneNumber, name, customInstructions } = body
+    const { persona, transferPhoneNumber, name, customInstructions } = body
 
     // Validate required fields
-    if (!businessId || !persona || !transferPhoneNumber || !name) {
+    if (!persona || !transferPhoneNumber || !name) {
       return NextResponse.json(
         { error: 'Missing required fields' }, 
         { status: 400 }
       )
     }
 
-    // 1. Create assistant record
+    // 1. Get user profile for business context
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+    }
+
+    // 2. Create assistant record (linked directly to user)
     const { data: assistant, error } = await supabase
       .from('assistants')
       .insert({
-        business_id: businessId,
+        user_id: user.id,
         name,
-        persona,
-        transfer_phone_number: transferPhoneNumber,
+        description: `AI Receptionist for ${user.email?.split('@')[0] || 'Business'}`,
         status: 'configuring'
       })
       .select()
@@ -41,34 +52,46 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // 2. Get business info for prompt
-      const { data: business } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('id', businessId)
-        .single()
-
-      if (!business) {
-        throw new Error('Business not found')
+      // 3. Create business context for prompt generation
+      const businessContext = {
+        name: user.email?.split('@')[0] || 'Your Business',
+        address: '',
+        website: '',
+        hours_of_operation: {
+          monday: '9:00 AM - 5:00 PM',
+          tuesday: '9:00 AM - 5:00 PM',
+          wednesday: '9:00 AM - 5:00 PM',
+          thursday: '9:00 AM - 5:00 PM',
+          friday: '9:00 AM - 5:00 PM',
+          saturday: 'Closed',
+          sunday: 'Closed'
+        },
+        persona: persona
       }
 
-      // 3. Create Vapi assistant using 5-pillar system
-      const vapi = new VapiClient(process.env.VAPI_API_KEY!)
+      // 4. Generate sophisticated prompt using 5-pillar system
+      const promptConfig = {
+        persona,
+        transferPhoneNumber,
+        businessContext,
+        customInstructions
+      }
       
-      // Generate sophisticated prompt using 5-pillar system
-      const systemPrompt = generateSystemPrompt(persona, business, transferPhoneNumber, customInstructions)
-      const firstMessage = getFirstMessage(persona, business.name)
-      const functions = getAdvancedFunctions(persona)
+      const systemPrompt = VoiceMatrixPromptSystem.generatePrompt(promptConfig)
+      const firstMessage = VoiceMatrixPromptSystem.generateFirstMessage(promptConfig)
+      const functions = VoiceMatrixPromptSystem.generateFunctions(promptConfig)
       
       console.log('🚀 Generated 5-Pillar System Prompt:', {
         persona,
-        businessName: business.name,
+        businessName: businessContext.name,
         promptLength: systemPrompt.length,
         customInstructions: !!customInstructions
       })
       
+      // 5. Create Vapi assistant
+      const vapi = new VapiClient(process.env.VAPI_API_KEY!)
       const vapiAssistant = await vapi.createAssistant({
-        name: `${business.name} AI Receptionist`,
+        name: `${businessContext.name} AI Receptionist`,
         systemPrompt,
         firstMessage,
         functions,
@@ -76,26 +99,18 @@ export async function POST(request: NextRequest) {
         serverUrlSecret: process.env.VAPI_WEBHOOK_SECRET
       })
 
-      // 4. Create phone number
+      // 6. Create phone number
       const phoneNumber = await vapi.createPhoneNumber({
         assistantId: vapiAssistant.id
       })
 
-      // 5. Update assistant with Vapi IDs and generated prompt
+      // 7. Update assistant with Vapi IDs and generated prompt
       const { data: updatedAssistant, error: updateError } = await supabase
         .from('assistants')
         .update({
           vapi_assistant_id: vapiAssistant.id,
-          vapi_phone_number_id: phoneNumber.id,
-          status: 'active',
-          configuration: {
-            systemPrompt,
-            firstMessage,
-            functions,
-            promptGenerated: new Date().toISOString(),
-            pillarsUsed: ['identity', 'behavior', 'capabilities', 'knowledge', 'callFlow'],
-            customInstructions: customInstructions || null
-          }
+          phone_number: phoneNumber.number,
+          status: 'active'
         })
         .eq('id', assistant.id)
         .select()
@@ -144,18 +159,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get all assistants for the user's businesses
+    // Get all assistants for the current user (proper isolation)
     const { data: assistants, error } = await supabase
       .from('assistants')
-      .select(`
-        *,
-        businesses!inner(
-          id,
-          name,
-          user_id
-        )
-      `)
-      .eq('businesses.user_id', user.id)
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Failed to fetch assistants:', error)

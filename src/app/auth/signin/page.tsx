@@ -45,12 +45,16 @@ export default function SignInPage() {
       }
 
       if (data.user) {
+        console.log('User signed in successfully:', data.user.email)
+        
         // Give user visual feedback
         setError('')
         
-        // Redirect to dashboard
-        router.push(redirectTo)
-        router.refresh()
+        // Wait a moment for session to be established
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Force a page refresh to ensure middleware picks up the session
+        window.location.href = redirectTo
       } else {
         setError('Sign in failed. Please try again.')
       }
