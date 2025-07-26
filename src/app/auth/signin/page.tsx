@@ -21,45 +21,48 @@ export default function SignInPage() {
     const params = new URLSearchParams(window.location.search)
     const redirect = params.get('redirect') || '/dashboard'
     setRedirectTo(redirect)
-  }, [])
+
+    // Check if already logged in
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push('/dashboard')
+      }
+    }
+    checkAuth()
+  }, [supabase, router])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    console.log('Attempting sign in with:', { email, password: password ? '***' : 'empty' })
+    console.log('🔐 Starting sign in process...')
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       })
 
-      console.log('Sign in response:', { data: !!data, error: error?.message })
-
       if (error) {
-        console.error('Sign in error:', error)
-        setError(error.message || 'Sign in failed. Please check your credentials.')
+        console.error('❌ Sign in error:', error)
+        setError(error.message)
         return
       }
 
       if (data.user) {
-        console.log('User signed in successfully:', data.user.email)
+        console.log('✅ User signed in successfully:', data.user.email)
         
-        // Give user visual feedback
-        setError('')
+        // Wait for session to be established
+        await new Promise(resolve => setTimeout(resolve, 1000))
         
-        // Wait a moment for session to be established
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Force a page refresh to ensure middleware picks up the session
+        // Force redirect using window.location for better reliability
         window.location.href = redirectTo
-      } else {
-        setError('Sign in failed. Please try again.')
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      console.error('❌ Unexpected error:', err)
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -69,28 +72,27 @@ export default function SignInPage() {
     setLoading(true)
     setError('')
 
+    console.log('🔐 Starting Google OAuth...')
+
     try {
-      console.log('Starting Google OAuth...')
-      console.log('Redirect URL:', `${window.location.origin}/auth/callback?redirect=${redirectTo}`)
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?redirect=${redirectTo}`,
-          skipBrowserRedirect: false,
         },
       })
 
-      console.log('OAuth response:', { data, error })
+      console.log('📝 OAuth response:', { data, error })
 
       if (error) {
-        console.error('OAuth error:', error)
+        console.error('❌ OAuth error:', error)
         setError(error.message)
         setLoading(false)
       }
+      // If successful, user will be redirected by OAuth flow
     } catch (err) {
-      console.error('Unexpected error:', err)
-      setError('An unexpected error occurred')
+      console.error('❌ Unexpected OAuth error:', err)
+      setError('Google sign-in failed. Please try again.')
       setLoading(false)
     }
   }
@@ -174,6 +176,7 @@ export default function SignInPage() {
                 required
                 className="input w-full"
                 placeholder="Enter your email"
+                disabled={loading}
               />
             </div>
 
@@ -189,6 +192,7 @@ export default function SignInPage() {
                 required
                 className="input w-full"
                 placeholder="Enter your password"
+                disabled={loading}
               />
             </div>
 
@@ -265,7 +269,7 @@ export default function SignInPage() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Continue with Google
+                {loading ? 'Connecting...' : 'Continue with Google'}
               </button>
             </div>
           </div>
@@ -275,5 +279,5 @@ export default function SignInPage() {
   )
 }
 
-// Force dynamic rendering
+// Force dynamic rendering to ensure fresh environment variables
 export const dynamic = 'force-dynamic'

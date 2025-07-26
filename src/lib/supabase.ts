@@ -2,6 +2,7 @@ import { createBrowserClient as createSupabaseBrowserClient, createServerClient 
 import { cookies } from 'next/headers'
 import type { NextRequest, NextResponse } from 'next/server'
 
+// Updated database types to match our simplified schema
 export type Database = {
   public: {
     Tables: {
@@ -9,53 +10,24 @@ export type Database = {
         Row: {
           id: string
           email: string
-          stripe_customer_id: string | null
+          role: 'user' | 'admin'
+          tier: 'free' | 'pro' | 'enterprise' | 'unlimited'
           created_at: string
           updated_at: string
         }
         Insert: {
           id: string
           email: string
-          stripe_customer_id?: string | null
+          role?: 'user' | 'admin'
+          tier?: 'free' | 'pro' | 'enterprise' | 'unlimited'
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           email?: string
-          stripe_customer_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      businesses: {
-        Row: {
-          id: string
-          user_id: string
-          name: string
-          address: string | null
-          website: string | null
-          hours_of_operation: any | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          name: string
-          address?: string | null
-          website?: string | null
-          hours_of_operation?: any | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          name?: string
-          address?: string | null
-          website?: string | null
-          hours_of_operation?: any | null
+          role?: 'user' | 'admin'
+          tier?: 'free' | 'pro' | 'enterprise' | 'unlimited'
           created_at?: string
           updated_at?: string
         }
@@ -63,95 +35,34 @@ export type Database = {
       assistants: {
         Row: {
           id: string
-          business_id: string
+          user_id: string
           name: string
-          persona: 'restaurant' | 'sales' | 'medical' | 'legal' | 'general'
-          transfer_phone_number: string
+          description: string | null
+          phone_number: string | null
           vapi_assistant_id: string | null
-          vapi_phone_number_id: string | null
-          status: 'pending' | 'configuring' | 'active' | 'paused' | 'error'
-          configuration: any
+          status: 'active' | 'inactive' | 'configuring'
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          business_id: string
+          user_id: string
           name: string
-          persona: 'restaurant' | 'sales' | 'medical' | 'legal' | 'general'
-          transfer_phone_number: string
+          description?: string | null
+          phone_number?: string | null
           vapi_assistant_id?: string | null
-          vapi_phone_number_id?: string | null
-          status?: 'pending' | 'configuring' | 'active' | 'paused' | 'error'
-          configuration?: any
+          status?: 'active' | 'inactive' | 'configuring'
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          business_id?: string
+          user_id?: string
           name?: string
-          persona?: 'restaurant' | 'sales' | 'medical' | 'legal' | 'general'
-          transfer_phone_number?: string
+          description?: string | null
+          phone_number?: string | null
           vapi_assistant_id?: string | null
-          vapi_phone_number_id?: string | null
-          status?: 'pending' | 'configuring' | 'active' | 'paused' | 'error'
-          configuration?: any
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      knowledge_bases: {
-        Row: {
-          id: string
-          assistant_id: string
-          content: string | null
-          processed_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          assistant_id: string
-          content?: string | null
-          processed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          assistant_id?: string
-          content?: string | null
-          processed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      qa_pairs: {
-        Row: {
-          id: string
-          assistant_id: string
-          question: string
-          answer: string
-          priority: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          assistant_id: string
-          question: string
-          answer: string
-          priority?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          assistant_id?: string
-          question?: string
-          answer?: string
-          priority?: number
+          status?: 'active' | 'inactive' | 'configuring'
           created_at?: string
           updated_at?: string
         }
@@ -160,40 +71,63 @@ export type Database = {
         Row: {
           id: string
           assistant_id: string
-          caller_number: string | null
-          start_time: string
-          end_time: string | null
-          duration_seconds: number | null
-          transcript: any | null
-          summary: string | null
+          phone_number: string | null
+          duration: number | null
+          status: 'completed' | 'failed' | 'busy' | 'no-answer' | null
           vapi_call_id: string | null
-          status: 'active' | 'completed' | 'failed' | 'transferred'
+          transcript: string | null
+          summary: string | null
+          lead_captured: boolean
           created_at: string
         }
         Insert: {
           id?: string
           assistant_id: string
-          caller_number?: string | null
-          start_time: string
-          end_time?: string | null
-          duration_seconds?: number | null
-          transcript?: any | null
-          summary?: string | null
+          phone_number?: string | null
+          duration?: number | null
+          status?: 'completed' | 'failed' | 'busy' | 'no-answer' | null
           vapi_call_id?: string | null
-          status?: 'active' | 'completed' | 'failed' | 'transferred'
+          transcript?: string | null
+          summary?: string | null
+          lead_captured?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           assistant_id?: string
-          caller_number?: string | null
-          start_time?: string
-          end_time?: string | null
-          duration_seconds?: number | null
-          transcript?: any | null
-          summary?: string | null
+          phone_number?: string | null
+          duration?: number | null
+          status?: 'completed' | 'failed' | 'busy' | 'no-answer' | null
           vapi_call_id?: string | null
-          status?: 'active' | 'completed' | 'failed' | 'transferred'
+          transcript?: string | null
+          summary?: string | null
+          lead_captured?: boolean
+          created_at?: string
+        }
+      }
+      knowledge_base: {
+        Row: {
+          id: string
+          assistant_id: string
+          content: string
+          embedding: number[] | null
+          metadata: any | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          assistant_id: string
+          content: string
+          embedding?: number[] | null
+          metadata?: any | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          assistant_id?: string
+          content?: string
+          embedding?: number[] | null
+          metadata?: any | null
           created_at?: string
         }
       }
@@ -202,12 +136,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      search_knowledge_chunks: {
+      match_knowledge_base: {
         Args: {
-          assistant_id: string
           query_embedding: number[]
           match_threshold: number
           match_count: number
+          assistant_uuid: string
         }
         Returns: {
           id: string
@@ -216,6 +150,12 @@ export type Database = {
           similarity: number
         }[]
       }
+      make_user_admin: {
+        Args: {
+          user_email: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
@@ -223,36 +163,34 @@ export type Database = {
   }
 }
 
-// Client-side Supabase client
-export function createClient() {
+// Browser client for client-side operations
+export function createBrowserClient() {
   return createSupabaseBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
 
-// Alias for compatibility  
-export { createClient as createBrowserClient }
-
-// Server-side Supabase client for API routes
+// Server client for API routes (simplified)
 export function createServerComponentClient(cookieStore?: any) {
+  const finalCookieStore = cookieStore || cookies()
+  
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          return cookieStore?.getAll() || []
+          return finalCookieStore.getAll()
         },
         setAll(cookiesToSet) {
-          if (cookieStore) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options)
-              })
-            } catch {
-              // Ignore errors in server components
-            }
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              finalCookieStore.set(name, value, options)
+            })
+          } catch (error) {
+            // Handle server component cookie setting errors
+            console.warn('Failed to set cookies in server component:', error)
           }
         },
       },
@@ -260,7 +198,7 @@ export function createServerComponentClient(cookieStore?: any) {
   )
 }
 
-// Middleware Supabase client
+// Middleware client for authentication checks
 export function createMiddlewareClient(req: NextRequest, res: NextResponse) {
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -280,3 +218,6 @@ export function createMiddlewareClient(req: NextRequest, res: NextResponse) {
     }
   )
 }
+
+// Create client alias for backward compatibility
+export const createClient = createBrowserClient

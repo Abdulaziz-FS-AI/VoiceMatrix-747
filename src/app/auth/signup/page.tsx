@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -12,24 +12,43 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [step, setStep] = useState(1) // 1: Account, 2: Confirmation
+  const [step, setStep] = useState(1) // 1: Form, 2: Email confirmation
   
   const router = useRouter()
   const supabase = createBrowserClient()
 
+  useEffect(() => {
+    // Check if already logged in
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push('/dashboard')
+      }
+    }
+    checkAuth()
+  }, [supabase, router])
+
   const validateForm = () => {
-    if (!email || !password || !confirmPassword) {
+    if (!email.trim() || !password || !confirmPassword) {
       setError('All fields are required')
       return false
     }
+    
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return false
     }
+    
     if (password.length < 6) {
       setError('Password must be at least 6 characters')
       return false
     }
+    
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError('Please enter a valid email address')
+      return false
+    }
+    
     return true
   }
 
@@ -41,23 +60,37 @@ export default function SignUpPage() {
     setLoading(true)
     setError('')
 
+    console.log('🔐 Starting signup process...')
+
     try {
-      // Create auth user - profile will be auto-created by trigger
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=/dashboard`,
+        },
       })
 
       if (error) {
+        console.error('❌ Signup error:', error)
         setError(error.message)
         return
       }
 
       if (data.user) {
-        setStep(2) // Show confirmation
+        console.log('✅ User created successfully:', data.user.email)
+        
+        if (data.user.email_confirmed_at) {
+          // Email already confirmed (might be duplicate signup)
+          window.location.href = '/dashboard'
+        } else {
+          // Show email confirmation step
+          setStep(2)
+        }
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      console.error('❌ Unexpected signup error:', err)
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -67,32 +100,32 @@ export default function SignUpPage() {
     setLoading(true)
     setError('')
 
+    console.log('🔐 Starting Google OAuth signup...')
+
     try {
-      console.log('Starting Google OAuth signup...')
-      console.log('Redirect URL:', `${window.location.origin}/auth/callback?redirect=/dashboard`)
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?redirect=/dashboard`,
-          skipBrowserRedirect: false,
         },
       })
 
-      console.log('OAuth response:', { data, error })
+      console.log('📝 OAuth response:', { data, error })
 
       if (error) {
-        console.error('OAuth error:', error)
+        console.error('❌ OAuth error:', error)
         setError(error.message)
         setLoading(false)
       }
+      // If successful, user will be redirected by OAuth flow
     } catch (err) {
-      console.error('Unexpected error:', err)
-      setError('An unexpected error occurred')
+      console.error('❌ Unexpected OAuth error:', err)
+      setError('Google sign-up failed. Please try again.')
       setLoading(false)
     }
   }
 
+  // Email confirmation step
   if (step === 2) {
     return (
       <div className="min-h-screen bg-bg-dark flex items-center justify-center p-8">
@@ -131,10 +164,20 @@ export default function SignUpPage() {
             <button
               onClick={() => handleSignUp()}
               className="text-primary-blue hover:text-indigo-light micro-transition"
+              disabled={loading}
             >
-              Resend confirmation
+              {loading ? 'Sending...' : 'Resend confirmation'}
             </button>
           </p>
+
+          <div className="mt-6">
+            <Link
+              href="/auth/signin"
+              className="text-text-secondary hover:text-text-primary micro-transition"
+            >
+              ← Back to sign in
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -222,6 +265,7 @@ export default function SignUpPage() {
                 required
                 className="input w-full"
                 placeholder="Enter your email"
+                disabled={loading}
               />
             </div>
 
@@ -237,6 +281,7 @@ export default function SignUpPage() {
                 required
                 className="input w-full"
                 placeholder="Create a password"
+                disabled={loading}
               />
             </div>
 
@@ -252,6 +297,7 @@ export default function SignUpPage() {
                 required
                 className="input w-full"
                 placeholder="Confirm your password"
+                disabled={loading}
               />
             </div>
 
@@ -305,12 +351,26 @@ export default function SignUpPage() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Continue with Google
+                {loading ? 'Connecting...' : 'Continue with Google'}
               </button>
             </div>
           </div>
+
+          <p className="text-xs text-text-disabled mt-6 text-center">
+            By creating an account, you agree to our{' '}
+            <Link href="/terms" className="text-primary-blue hover:text-indigo-light">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-primary-blue hover:text-indigo-light">
+              Privacy Policy
+            </Link>
+          </p>
         </div>
       </div>
     </div>
   )
 }
+
+// Force dynamic rendering to ensure fresh environment variables
+export const dynamic = 'force-dynamic'
