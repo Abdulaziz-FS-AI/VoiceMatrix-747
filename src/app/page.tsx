@@ -142,16 +142,23 @@ export default function Home() {
       </section>
 
       {/* Features Slideshow Section */}
-      <section id="features" className="py-32dp px-4 sm:px-6 lg:px-8 bg-bg-surface">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="py-32dp px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-bg-surface via-bg-dark/50 to-bg-dark relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-blue/5 via-transparent to-accent-teal/5 pointer-events-none" />
+        <div className="absolute top-0 left-0 w-96 h-96 bg-primary-blue/10 rounded-full filter blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent-teal/10 rounded-full filter blur-3xl translate-x-1/2 translate-y-1/2" />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-20 slide-in-left">
-            <span className="text-label text-accent-teal mb-4 block">INTELLIGENT FEATURES</span>
-            <h2 className="mb-6">Everything you need for perfect customer service</h2>
+            <span className="text-label text-accent-teal mb-4 block font-semibold tracking-wider">INTELLIGENT FEATURES</span>
+            <h2 className="mb-6 text-h1 bg-gradient-to-r from-text-primary to-primary-blue bg-clip-text text-transparent">
+              Everything you need for perfect customer service
+            </h2>
           </div>
 
           {/* Feature Slideshow */}
           <div className="max-w-4xl mx-auto mb-20">
-            <div className="slideshow-container min-h-[300px] flex items-center justify-center">
+            <div className="slideshow-container min-h-[400px] flex items-center justify-center">
               {featureSlides.map((slide, index) => (
                 <div 
                   key={index}
@@ -159,11 +166,13 @@ export default function Home() {
                     index === currentSlide ? 'active' : ''
                   }`}
                 >
-                  <div className="bg-primary-blue/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 text-4xl">
+                  <div className="bg-gradient-to-br from-primary-blue/20 to-accent-teal/20 w-28 h-28 rounded-3xl flex items-center justify-center mx-auto mb-10 text-5xl shadow-2xl backdrop-blur-sm border border-primary-blue/20 transform hover:scale-110 transition-transform">
                     {slide.icon}
                   </div>
-                  <h3 className="text-h2 mb-6 text-text-primary">{slide.title}</h3>
-                  <p className="text-body-large text-text-secondary leading-relaxed max-w-2xl mx-auto">
+                  <h3 className="text-h1 mb-8 bg-gradient-to-r from-text-primary via-primary-blue to-accent-teal bg-clip-text text-transparent font-bold">
+                    {slide.title}
+                  </h3>
+                  <p className="text-xl text-text-primary/90 leading-relaxed max-w-3xl mx-auto font-light">
                     {slide.description}
                   </p>
                 </div>
@@ -185,92 +194,104 @@ export default function Home() {
           {/* Additional Features Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 slide-in-right">
             {/* Feature 1 */}
-            <div className="card hover:border-primary-blue/50 emphasis-transition">
-              <div className="bg-primary-blue/10 w-12 h-12 rounded-8dp flex items-center justify-center mb-6 text-2xl">
+            <div className="group card hover:border-primary-blue/50 emphasis-transition bg-gradient-to-br from-bg-surface/80 to-bg-dark/80 backdrop-blur-sm hover:scale-105 hover:shadow-2xl border-bg-dark/20">
+              <div className="bg-gradient-to-br from-primary-blue/20 to-purple-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition-transform shadow-lg">
                 🤖
               </div>
-              <h3 className="mb-4">Natural Conversations</h3>
-              <p className="text-text-secondary mb-4">
+              <h3 className="mb-4 text-h3 bg-gradient-to-r from-text-primary to-primary-blue bg-clip-text text-transparent font-semibold">
+                Natural Conversations
+              </h3>
+              <p className="text-text-primary/80 mb-6 leading-relaxed">
                 Advanced AI that understands context, handles interruptions, and maintains 
                 natural conversation flow just like a human receptionist.
               </p>
-              <a href="#" className="text-primary-blue hover:text-indigo-light micro-transition flex items-center">
-                Learn more →
+              <a href="#" className="text-primary-blue hover:text-accent-teal micro-transition flex items-center font-medium group">
+                Learn more <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </a>
             </div>
 
             {/* Feature 2 */}
-            <div className="card hover:border-accent-teal/50 emphasis-transition">
-              <div className="bg-accent-teal/10 w-12 h-12 rounded-8dp flex items-center justify-center mb-6 text-2xl">
+            <div className="group card hover:border-accent-teal/50 emphasis-transition bg-gradient-to-br from-bg-surface/80 to-bg-dark/80 backdrop-blur-sm hover:scale-105 hover:shadow-2xl border-bg-dark/20">
+              <div className="bg-gradient-to-br from-accent-teal/20 to-green-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition-transform shadow-lg">
                 🕐
               </div>
-              <h3 className="mb-4">24/7 Availability</h3>
-              <p className="text-text-secondary mb-4">
+              <h3 className="mb-4 text-h3 bg-gradient-to-r from-text-primary to-accent-teal bg-clip-text text-transparent font-semibold">
+                24/7 Availability
+              </h3>
+              <p className="text-text-primary/80 mb-6 leading-relaxed">
                 Never miss a call again. Your AI receptionist works around the clock, 
                 handling calls during holidays, nights, and weekends.
               </p>
-              <a href="#" className="text-accent-teal hover:text-teal-400 micro-transition flex items-center">
-                Learn more →
+              <a href="#" className="text-accent-teal hover:text-teal-400 micro-transition flex items-center font-medium group">
+                Learn more <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </a>
             </div>
 
             {/* Feature 3 */}
-            <div className="card hover:border-accent-pink/50 emphasis-transition">
-              <div className="bg-accent-pink/10 w-12 h-12 rounded-8dp flex items-center justify-center mb-6 text-2xl">
+            <div className="group card hover:border-accent-pink/50 emphasis-transition bg-gradient-to-br from-bg-surface/80 to-bg-dark/80 backdrop-blur-sm hover:scale-105 hover:shadow-2xl border-bg-dark/20">
+              <div className="bg-gradient-to-br from-accent-pink/20 to-purple-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition-transform shadow-lg">
                 ⚡
               </div>
-              <h3 className="mb-4">Instant Setup</h3>
-              <p className="text-text-secondary mb-4">
+              <h3 className="mb-4 text-h3 bg-gradient-to-r from-text-primary to-accent-pink bg-clip-text text-transparent font-semibold">
+                Instant Setup
+              </h3>
+              <p className="text-text-primary/80 mb-6 leading-relaxed">
                 Get started in minutes. Upload your business info, customize responses, 
                 and your AI receptionist is ready to take calls.
               </p>
-              <a href="#" className="text-accent-pink hover:text-pink-400 micro-transition flex items-center">
-                Learn more →
+              <a href="#" className="text-accent-pink hover:text-pink-400 micro-transition flex items-center font-medium group">
+                Learn more <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </a>
             </div>
 
             {/* Feature 4 */}
-            <div className="card hover:border-success-green/50 emphasis-transition">
-              <div className="bg-success-green/10 w-12 h-12 rounded-8dp flex items-center justify-center mb-6 text-2xl">
+            <div className="group card hover:border-success-green/50 emphasis-transition bg-gradient-to-br from-bg-surface/80 to-bg-dark/80 backdrop-blur-sm hover:scale-105 hover:shadow-2xl border-bg-dark/20">
+              <div className="bg-gradient-to-br from-success-green/20 to-emerald-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition-transform shadow-lg">
                 🎯
               </div>
-              <h3 className="mb-4">Lead Capture</h3>
-              <p className="text-text-secondary mb-4">
+              <h3 className="mb-4 text-h3 bg-gradient-to-r from-text-primary to-success-green bg-clip-text text-transparent font-semibold">
+                Lead Capture
+              </h3>
+              <p className="text-text-primary/80 mb-6 leading-relaxed">
                 Automatically collect caller information, qualify leads, and route them 
                 to your CRM or sales team for immediate follow-up.
               </p>
-              <a href="#" className="text-success-green hover:text-green-400 micro-transition flex items-center">
-                Learn more →
+              <a href="#" className="text-success-green hover:text-green-400 micro-transition flex items-center font-medium group">
+                Learn more <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </a>
             </div>
 
             {/* Feature 5 */}
-            <div className="card hover:border-warning-yellow/50 emphasis-transition">
-              <div className="bg-warning-yellow/10 w-12 h-12 rounded-8dp flex items-center justify-center mb-6 text-2xl">
+            <div className="group card hover:border-warning-yellow/50 emphasis-transition bg-gradient-to-br from-bg-surface/80 to-bg-dark/80 backdrop-blur-sm hover:scale-105 hover:shadow-2xl border-bg-dark/20">
+              <div className="bg-gradient-to-br from-warning-yellow/20 to-orange-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition-transform shadow-lg">
                 🔀
               </div>
-              <h3 className="mb-4">Smart Routing</h3>
-              <p className="text-text-secondary mb-4">
+              <h3 className="mb-4 text-h3 bg-gradient-to-r from-text-primary to-warning-yellow bg-clip-text text-transparent font-semibold">
+                Smart Routing
+              </h3>
+              <p className="text-text-primary/80 mb-6 leading-relaxed">
                 Intelligently transfer calls to the right person or department based 
                 on caller intent and your business rules.
               </p>
-              <a href="#" className="text-warning-yellow hover:text-yellow-300 micro-transition flex items-center">
-                Learn more →
+              <a href="#" className="text-warning-yellow hover:text-yellow-300 micro-transition flex items-center font-medium group">
+                Learn more <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </a>
             </div>
 
             {/* Feature 6 */}
-            <div className="card hover:border-indigo-light/50 emphasis-transition">
-              <div className="bg-indigo-light/10 w-12 h-12 rounded-8dp flex items-center justify-center mb-6 text-2xl">
+            <div className="group card hover:border-indigo-light/50 emphasis-transition bg-gradient-to-br from-bg-surface/80 to-bg-dark/80 backdrop-blur-sm hover:scale-105 hover:shadow-2xl border-bg-dark/20">
+              <div className="bg-gradient-to-br from-indigo-light/20 to-blue-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition-transform shadow-lg">
                 🎤
               </div>
-              <h3 className="mb-4">Custom Voice</h3>
-              <p className="text-text-secondary mb-4">
+              <h3 className="mb-4 text-h3 bg-gradient-to-r from-text-primary to-indigo-light bg-clip-text text-transparent font-semibold">
+                Custom Voice
+              </h3>
+              <p className="text-text-primary/80 mb-6 leading-relaxed">
                 Choose from professional voices or clone your own. Your AI receptionist 
                 will sound exactly how you want to represent your brand.
               </p>
-              <a href="#" className="text-indigo-light hover:text-indigo-300 micro-transition flex items-center">
-                Learn more →
+              <a href="#" className="text-indigo-light hover:text-indigo-300 micro-transition flex items-center font-medium group">
+                Learn more <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </a>
             </div>
           </div>
