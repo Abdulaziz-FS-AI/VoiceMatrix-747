@@ -15,7 +15,18 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create assistants table (linked directly to user)
+-- First, add user_id column to existing assistants table if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'assistants' AND column_name = 'user_id'
+    ) THEN
+        ALTER TABLE assistants ADD COLUMN user_id UUID REFERENCES profiles(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Create assistants table (linked directly to user) if it doesn't exist
 CREATE TABLE IF NOT EXISTS assistants (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -27,6 +38,9 @@ CREATE TABLE IF NOT EXISTS assistants (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- If you have existing assistants without user_id, you'll need to manually set them
+-- UPDATE assistants SET user_id = (SELECT id FROM profiles WHERE email = 'your-email@example.com') WHERE user_id IS NULL;
 
 -- Create call_logs table
 CREATE TABLE IF NOT EXISTS call_logs (
