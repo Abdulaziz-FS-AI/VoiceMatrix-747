@@ -1,4 +1,4 @@
-import { createBrowserClient, createServerClient } from '@supabase/ssr'
+import { createBrowserClient as createSupabaseBrowserClient, createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { NextRequest, NextResponse } from 'next/server'
 
@@ -225,14 +225,14 @@ export type Database = {
 
 // Client-side Supabase client
 export function createClient() {
-  return createBrowserClient<Database>(
+  return createSupabaseBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
 
-// Alias for compatibility
-export const createBrowserClient = createClient
+// Alias for compatibility  
+export { createClient as createBrowserClient }
 
 // Server-side Supabase client for API routes
 export function createServerComponentClient(cookieStore?: any) {

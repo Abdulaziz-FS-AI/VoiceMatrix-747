@@ -4,9 +4,10 @@ import { VapiClient, generateSystemPrompt, getFirstMessage, getAdvancedFunctions
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const supabase = createServerComponentClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -123,9 +124,10 @@ export async function PUT(
 // Get current prompt configuration
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const supabase = createServerComponentClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -162,7 +164,7 @@ export async function GET(
       assistantId: assistant.id,
       name: assistant.name,
       persona: assistant.persona,
-      businessName: assistant.businesses.name,
+      businessName: (assistant.businesses as any)?.[0]?.name || 'Unknown Business',
       promptInfo: {
         length: config.systemPrompt?.length || 0,
         lastGenerated: config.promptGenerated,

@@ -3,8 +3,9 @@ import { createServerComponentClient } from '@/lib/supabase'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const supabase = createServerComponentClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -86,8 +87,9 @@ export async function PUT(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const supabase = createServerComponentClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()

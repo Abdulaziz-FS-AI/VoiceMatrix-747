@@ -166,8 +166,8 @@ function findQAMatch(query: string, qaPairs: any[]) {
       }
       
       // Keyword overlap
-      const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 3)
-      const questionWords = normalizedQuestion.split(/\s+/).filter(w => w.length > 3)
+      const queryWords = normalizedQuery.split(/\s+/).filter((w: string) => w.length > 3)
+      const questionWords = normalizedQuestion.split(/\s+/).filter((w: string) => w.length > 3)
       const overlap = queryWords.filter(word => questionWords.includes(word)).length
       
       return overlap >= Math.min(queryWords.length, questionWords.length) * 0.6

@@ -52,7 +52,7 @@ export class PayPalClient {
   private async getAccessToken(): Promise<string> {
     // Check if we have a valid token
     if (this.accessToken && this.tokenExpiry && new Date() < this.tokenExpiry) {
-      return this.accessToken
+      return this.accessToken!
     }
 
     const auth = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString('base64')
@@ -74,10 +74,10 @@ export class PayPalClient {
     this.accessToken = data.access_token
     this.tokenExpiry = new Date(Date.now() + (data.expires_in * 1000))
     
-    return this.accessToken
+    return this.accessToken!
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = await this.getAccessToken()
     
     const response = await fetch(`${this.baseURL}${endpoint}`, {

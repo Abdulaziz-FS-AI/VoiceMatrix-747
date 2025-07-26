@@ -62,8 +62,8 @@ export default function DashboardPage() {
     responseTime: '0s',
     uptime: '0%'
   })
-  const [assistants, setAssistants] = useState([])
-  const [recentActivity, setRecentActivity] = useState([])
+  const [assistants, setAssistants] = useState<any[]>([])
+  const [recentActivity, setRecentActivity] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const supabase = createBrowserClient()

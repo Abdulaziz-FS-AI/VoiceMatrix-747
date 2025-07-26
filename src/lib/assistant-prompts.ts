@@ -256,10 +256,10 @@ ${behavior.restrictions}
 
 === PILLAR 3: FUNCTIONAL CAPABILITIES ===
 PRIMARY RESPONSIBILITIES:
-${capabilities.primary}
+${(capabilities as any).primary || 'Handle customer inquiries'}
 
 SECONDARY CAPABILITIES:
-${capabilities.secondary}
+${(capabilities as any).secondary || 'Provide helpful information'}
 
 FUNCTION USAGE:
 - Knowledge Search: ${universal.knowledgeSearch}
@@ -267,7 +267,7 @@ FUNCTION USAGE:
 - Information Capture: ${universal.informationCapture}
 
 SPECIALIZED FUNCTIONS:
-${capabilities.knowledge}
+${(capabilities as any).knowledge || 'Access specialized knowledge when needed'}
 
 === PILLAR 4: KNOWLEDGE INTEGRATION ===
 SEARCH STRATEGY:
@@ -331,7 +331,7 @@ export function generateAdvancedFunctions(config: AssistantConfiguration) {
   return [
     {
       name: "searchKnowledgeBase",
-      description: `Search the business knowledge base for specific information. Use this when you need details about: ${capabilities.knowledge}`,
+      description: `Search the business knowledge base for specific information. Use this when you need details about: ${(capabilities as any).knowledge || 'Access specialized knowledge when needed'}`,
       parameters: {
         type: "object",
         properties: {

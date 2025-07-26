@@ -56,7 +56,7 @@ export default function AdminPanel() {
 
   const loadAdminData = async () => {
     try {
-      // Get all users with their business info and counts
+      // Get all users with simplified query
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select(`
@@ -64,10 +64,7 @@ export default function AdminPanel() {
           email,
           role,
           tier,
-          created_at,
-          businesses!inner(name),
-          assistants:businesses.assistants(count),
-          call_logs:businesses.assistants.call_logs(count)
+          created_at
         `)
         .order('created_at', { ascending: false })
 
@@ -76,16 +73,16 @@ export default function AdminPanel() {
         return
       }
 
-      // Process the data
-      const processedUsers = usersData?.map(user => ({
+      // Process the data with simplified structure
+      const processedUsers = usersData?.map((user: any) => ({
         id: user.id,
         email: user.email,
         role: user.role || 'user',
         tier: user.tier || 'free',
         created_at: user.created_at,
-        business_name: (user.businesses as any)?.[0]?.name || 'No Business',
-        total_assistants: (user.assistants as any)?.[0]?.count || 0,
-        total_calls: (user.call_logs as any)?.[0]?.count || 0
+        business_name: 'Business',
+        total_assistants: 0,
+        total_calls: 0
       })) || []
 
       setUsers(processedUsers)

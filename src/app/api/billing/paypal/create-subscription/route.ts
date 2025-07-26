@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
 
     // Extract approval URL from PayPal response
-    const approvalUrl = subscription.links?.find(link => link.rel === 'approve')?.href
+    const approvalUrl = (subscription as any).links?.find((link: any) => link.rel === 'approve')?.href
 
     return NextResponse.json({
       success: true,
