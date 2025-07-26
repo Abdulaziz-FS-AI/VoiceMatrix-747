@@ -28,20 +28,31 @@ export default function SignInPage() {
     setLoading(true)
     setError('')
 
+    console.log('Attempting sign in with:', { email, password: password ? '***' : 'empty' })
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
+      console.log('Sign in response:', { data: !!data, error: error?.message })
+
       if (error) {
-        setError(error.message)
+        console.error('Sign in error:', error)
+        setError(error.message || 'Sign in failed. Please check your credentials.')
         return
       }
 
       if (data.user) {
+        // Give user visual feedback
+        setError('')
+        
+        // Redirect to dashboard
         router.push(redirectTo)
         router.refresh()
+      } else {
+        setError('Sign in failed. Please try again.')
       }
     } catch (err) {
       setError('An unexpected error occurred')

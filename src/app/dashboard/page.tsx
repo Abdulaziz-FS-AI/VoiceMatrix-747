@@ -71,7 +71,15 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Get user's assistants
+        // Get current user
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        
+        if (authError || !user) {
+          console.error('Auth error:', authError)
+          return
+        }
+
+        // Get user's assistants (PROPERLY FILTERED BY USER)
         const { data: userAssistants, error: assistantsError } = await supabase
           .from('assistants')
           .select(`
@@ -82,6 +90,7 @@ export default function DashboardPage() {
               user_id
             )
           `)
+          .eq('businesses.user_id', user.id)
 
         if (assistantsError) {
           console.error('Error fetching assistants:', assistantsError)
@@ -89,20 +98,28 @@ export default function DashboardPage() {
           setAssistants(userAssistants || [])
         }
 
-        // Get today's calls (simplified for now)
+        // Get today's calls (FILTERED BY USER'S ASSISTANTS)
         const today = new Date().toISOString().split('T')[0]
-        const { data: todaysCalls, error: callsError } = await supabase
-          .from('call_logs')
-          .select('id, created_at, status')
-          .gte('created_at', today)
-
-        if (!callsError && todaysCalls) {
-          setMetrics(prev => ({
-            ...prev,
-            callsToday: todaysCalls.length,
-            leadsCapured: todaysCalls.filter(call => call.status === 'completed').length
-          }))
+        const assistantIds = userAssistants?.map(a => a.id) || []
+        
+        let todaysCalls: any[] = []
+        if (assistantIds.length > 0) {
+          const { data: callsData, error: callsError } = await supabase
+            .from('call_logs')
+            .select('id, created_at, status')
+            .gte('created_at', today)
+            .in('assistant_id', assistantIds)
+            
+          if (!callsError) {
+            todaysCalls = callsData || []
+          }
         }
+
+        setMetrics(prev => ({
+          ...prev,
+          callsToday: todaysCalls.length,
+          leadsCapured: todaysCalls.filter(call => call.status === 'completed').length
+        }))
 
         // Mock recent activity for now
         setRecentActivity([

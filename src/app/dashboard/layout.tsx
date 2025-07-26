@@ -52,15 +52,27 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      
-      if (user) {
-        const adminInfo = await checkAdminStatus(user.id)
-        setAdminStatus(adminInfo)
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        
+        if (error) {
+          console.error('Auth check error:', error)
+          router.push('/auth/signin')
+          return
+        }
+        
+        setUser(user)
+        
+        if (user) {
+          const adminInfo = await checkAdminStatus(user.id)
+          setAdminStatus(adminInfo)
+        }
+        
+        setLoading(false)
+      } catch (error) {
+        console.error('Dashboard auth error:', error)
+        router.push('/auth/signin')
       }
-      
-      setLoading(false)
     }
 
     getUser()

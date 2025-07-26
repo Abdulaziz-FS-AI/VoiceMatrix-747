@@ -74,7 +74,10 @@ export default function SignUpPage() {
       }
 
       if (data.user) {
-        // 2. Create business profile
+        // 2. Wait a moment for profile trigger to complete
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // 3. Create business profile
         const { error: businessError } = await supabase
           .from('businesses')
           .insert({
@@ -84,7 +87,8 @@ export default function SignUpPage() {
 
         if (businessError) {
           console.error('Business creation error:', businessError)
-          // Don't show this error to user - auth user was created successfully
+          setError('Account created but business setup failed. Please contact support.')
+          return
         }
 
         setStep(3) // Show confirmation
@@ -104,7 +108,7 @@ export default function SignUpPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirect=/onboarding`,
+          redirectTo: `${window.location.origin}/auth/callback?redirect=/dashboard`,
         },
       })
 

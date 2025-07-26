@@ -1,10 +1,12 @@
 'use client';
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const router = useRouter();
 
   const featureSlides = [
     {
@@ -77,8 +79,18 @@ export default function Home() {
               <a href="#features" className="text-text-secondary hover:text-text-primary micro-transition">Features</a>
               <a href="#pricing" className="text-text-secondary hover:text-text-primary micro-transition">Pricing</a>
               <a href="#contact" className="text-text-secondary hover:text-text-primary micro-transition">Contact</a>
-              <button className="btn-secondary">Sign In</button>
-              <button className="btn-primary">Start Free Trial</button>
+              <button 
+                onClick={() => router.push('/auth/signin')}
+                className="btn-secondary"
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={() => router.push('/auth/signup')}
+                className="btn-primary"
+              >
+                Start Free Trial
+              </button>
             </div>
           </div>
         </div>
@@ -99,7 +111,10 @@ export default function Home() {
               capture every lead, and provide instant customer support while you focus on growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16 fade-in-up-delay-2">
-              <button className="btn-primary text-lg px-8 py-4 w-full sm:w-auto pulse-glow">
+              <button 
+                onClick={() => router.push('/auth/signup')}
+                className="btn-primary text-lg px-8 py-4 w-full sm:w-auto pulse-glow"
+              >
                 📞 Start Free Trial
               </button>
               <button className="btn-secondary text-lg px-8 py-4 w-full sm:w-auto">
@@ -312,7 +327,10 @@ export default function Home() {
             improve customer service, and never miss another important call.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <button className="btn-primary text-lg px-8 py-4 pulse-glow">
+            <button 
+              onClick={() => router.push('/auth/signup')}
+              className="btn-primary text-lg px-8 py-4 pulse-glow"
+            >
               📞 Start Free 14-Day Trial
             </button>
             <button className="btn-secondary text-lg px-8 py-4">
