@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createBrowserClient } from '@/lib/supabase'
@@ -11,11 +11,17 @@ export default function SignInPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [redirectTo, setRedirectTo] = useState('/dashboard')
   
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirect') || '/dashboard'
   const supabase = createBrowserClient()
+
+  useEffect(() => {
+    // Get redirect parameter on client side
+    const params = new URLSearchParams(window.location.search)
+    const redirect = params.get('redirect') || '/dashboard'
+    setRedirectTo(redirect)
+  }, [])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -245,3 +251,6 @@ export default function SignInPage() {
     </div>
   )
 }
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
