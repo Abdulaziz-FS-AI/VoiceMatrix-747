@@ -1,5 +1,4 @@
 import { createBrowserClient as createSupabaseBrowserClient, createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import type { NextRequest, NextResponse } from 'next/server'
 
 // Updated database types to match our simplified schema
@@ -173,6 +172,8 @@ export function createBrowserClient() {
 
 // Server client for API routes (simplified)
 export function createServerComponentClient(cookieStore?: any) {
+  // Import cookies only when needed to avoid build issues
+  const { cookies } = require('next/headers')
   const finalCookieStore = cookieStore || cookies()
   
   return createServerClient<Database>(
