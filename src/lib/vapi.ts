@@ -1,39 +1,17 @@
+import { VapiClient as VapiSDK } from "@vapi-ai/server-sdk"
 import crypto from 'crypto'
 
+// Define our own types since the SDK doesn't export them
 export interface VapiAssistant {
   id: string
-  orgId: string
+  orgId?: string
   name: string
-  model: {
-    provider: string
-    model: string
-    temperature: number
-    systemPrompt: string
-    functions?: VapiFunction[]
-  }
-  voice: {
-    provider: string
-    voiceId: string
-    stability?: number
-    similarityBoost?: number
-  }
+  model?: any
+  voice?: any
   firstMessage?: string
-  recordingEnabled: boolean
-  endCallFunctionEnabled: boolean
   createdAt: string
   updatedAt: string
-  serverUrl?: string
-  serverUrlSecret?: string
-}
-
-export interface VapiFunction {
-  name: string
-  description: string
-  parameters: {
-    type: string
-    properties: Record<string, any>
-    required?: string[]
-  }
+  server?: any
 }
 
 export interface VapiPhoneNumber {
@@ -43,30 +21,50 @@ export interface VapiPhoneNumber {
   assistantId: string
 }
 
+export interface VapiTool {
+  type: "apiRequest"
+  name: string
+  description: string
+  url: string
+  method: "POST" | "GET" | "PUT" | "DELETE"
+  headers?: Record<string, any>
+  body?: {
+    type: string
+    properties: Record<string, any>
+    required?: string[]
+  }
+  timeoutSeconds?: number
+}
+
 export interface CreateAssistantDto {
   name: string
   systemPrompt: string
   voiceId?: string
   firstMessage?: string
-  functions?: VapiFunction[]
+  tools?: VapiTool[]
   serverUrl?: string
-  serverUrlSecret?: string
+  transferPhoneNumber?: string
 }
 
 export interface UpdateAssistantDto {
   name?: string
   model?: {
-    systemPrompt?: string
+    messages?: Array<{
+      role: "system" | "user" | "assistant"
+      content: string
+    }>
+    tools?: VapiTool[]
     temperature?: number
-    functions?: VapiFunction[]
   }
   voice?: {
+    provider?: string
     voiceId?: string
-    stability?: number
-    similarityBoost?: number
   }
   firstMessage?: string
-  serverUrl?: string
+  server?: {
+    url?: string
+    timeoutSeconds?: number
+  }
 }
 
 export interface CreatePhoneNumberDto {
@@ -76,96 +74,111 @@ export interface CreatePhoneNumberDto {
 }
 
 export class VapiClient {
-  private apiKey: string
-  private baseURL = 'https://api.vapi.ai'
+  private client: VapiSDK
   
   constructor(apiKey: string) {
-    this.apiKey = apiKey
+    this.client = new VapiSDK({ token: apiKey })
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        ...options.headers,
+  async createAssistant(data: CreateAssistantDto) {
+    const assistantConfig: any = {
+      name: data.name,
+      model: {
+        provider: "openai",
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: data.systemPrompt
+          }
+        ],
+        temperature: 0.7,
+        ...(data.tools && data.tools.length > 0 && {
+          tools: data.tools
+        })
       },
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Vapi API error: ${response.status} ${error}`)
+      voice: {
+        provider: "11labs",
+        voiceId: data.voiceId || "21m00Tcm4TlvDq8ikWAM"
+      },
+      firstMessage: data.firstMessage || "Hello, how can I help you today?",
+      ...(data.serverUrl && {
+        server: {
+          url: data.serverUrl,
+          timeoutSeconds: 20
+        }
+      })
     }
 
-    return response.json()
+    return await this.client.assistants.create(assistantConfig)
   }
 
-  async createAssistant(data: CreateAssistantDto): Promise<VapiAssistant> {
-    return this.request<VapiAssistant>('/assistant', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: data.name,
-        model: {
-          provider: "openai",
-          model: "gpt-4",
-          temperature: 0.7,
-          systemPrompt: data.systemPrompt,
-          functions: data.functions || []
-        },
-        voice: {
-          provider: "11labs",
-          voiceId: data.voiceId || "21m00Tcm4TlvDq8ikWAM",
-          stability: 0.5,
-          similarityBoost: 0.75
-        },
-        firstMessage: data.firstMessage || "Hello, how can I help you today?",
-        endCallFunctionEnabled: true,
-        recordingEnabled: true,
-        serverUrl: data.serverUrl,
-        serverUrlSecret: data.serverUrlSecret
-      })
-    })
+  async getAssistant(assistantId: string) {
+    return await this.client.assistants.get(assistantId)
   }
 
-  async getAssistant(assistantId: string): Promise<VapiAssistant> {
-    return this.request<VapiAssistant>(`/assistant/${assistantId}`)
-  }
+  async updateAssistant(assistantId: string, updates: UpdateAssistantDto) {
+    const updateConfig: any = {}
+    
+    if (updates.name) {
+      updateConfig.name = updates.name
+    }
+    
+    if (updates.model) {
+      updateConfig.model = {}
+      
+      if (updates.model.messages) {
+        updateConfig.model.messages = updates.model.messages
+      }
+      
+      if (updates.model.tools) {
+        updateConfig.model.tools = updates.model.tools
+      }
+      
+      if (updates.model.temperature !== undefined) {
+        updateConfig.model.temperature = updates.model.temperature
+      }
+    }
+    
+    if (updates.voice) {
+      updateConfig.voice = updates.voice
+    }
+    
+    if (updates.firstMessage) {
+      updateConfig.firstMessage = updates.firstMessage
+    }
+    
+    if (updates.server) {
+      updateConfig.server = updates.server
+    }
 
-  async updateAssistant(
-    assistantId: string, 
-    updates: UpdateAssistantDto
-  ): Promise<VapiAssistant> {
-    return this.request<VapiAssistant>(`/assistant/${assistantId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(updates)
-    })
+    return await this.client.assistants.update(assistantId, updateConfig)
   }
 
   async deleteAssistant(assistantId: string): Promise<void> {
-    await this.request(`/assistant/${assistantId}`, {
-      method: 'DELETE'
-    })
+    await this.client.assistants.delete(assistantId)
   }
 
-  async createPhoneNumber(data: CreatePhoneNumberDto): Promise<VapiPhoneNumber> {
-    return this.request<VapiPhoneNumber>('/phone-number', {
-      method: 'POST',
-      body: JSON.stringify({
-        provider: data.provider || "twilio",
-        assistantId: data.assistantId,
-        ...(data.number && { number: data.number })
-      })
-    })
+  async createPhoneNumber(data: CreatePhoneNumberDto) {
+    const config: any = {
+      provider: (data.provider as "twilio") || "twilio",
+      assistantId: data.assistantId
+    }
+
+    // Add Twilio-specific fields if using Twilio provider
+    if (config.provider === "twilio") {
+      config.twilioAccountSid = process.env.TWILIO_ACCOUNT_SID
+      config.twilioAuthToken = process.env.TWILIO_AUTH_TOKEN
+      if (data.number) {
+        config.number = data.number
+      }
+    }
+
+    return await this.client.phoneNumbers.create(config)
   }
 
-  async getCall(callId: string): Promise<any> {
-    return this.request(`/call/${callId}`)
+  async getCall(callId: string) {
+    return await this.client.calls.get(callId)
   }
 
   static verifyWebhookSignature(
@@ -270,7 +283,7 @@ export function getFirstMessage(persona: string, businessName: string): string {
   return VoiceMatrixPromptSystem.generateFirstMessage(config)
 }
 
-export function getAdvancedFunctions(persona: string): VapiFunction[] {
+export function getAdvancedFunctions(persona: string): VapiTool[] {
   const config: AssistantConfiguration = {
     persona,
     transferPhoneNumber: '', // Not needed for functions
@@ -280,7 +293,7 @@ export function getAdvancedFunctions(persona: string): VapiFunction[] {
     }
   }
 
-  return VoiceMatrixPromptSystem.generateFunctions(config)
+  return VoiceMatrixPromptSystem.generateFunctions(config, '')
 }
 
 // Legacy functions for backward compatibility

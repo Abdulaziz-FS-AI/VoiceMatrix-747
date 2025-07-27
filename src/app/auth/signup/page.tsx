@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createBrowserClient } from '@/lib/supabase'
 
-export default function SignUpPage() {
+function SignUpForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -15,14 +15,25 @@ export default function SignUpPage() {
   const [step, setStep] = useState(1) // 1: Form, 2: Email confirmation
   
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createBrowserClient()
+
+  // Get plan info from URL params
+  const planId = searchParams.get('plan')
+  const billing = searchParams.get('billing')
+  const returnTo = searchParams.get('returnTo')
 
   useEffect(() => {
     // Check if already logged in
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        router.push('/dashboard')
+        // If coming from checkout flow, redirect back to checkout
+        if (returnTo) {
+          router.push(`${returnTo}?plan=${planId}&billing=${billing}`)
+        } else {
+          router.push('/dashboard')
+        }
       }
     }
     checkAuth()
@@ -67,7 +78,9 @@ export default function SignUpPage() {
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=/dashboard`,
+          emailRedirectTo: returnTo 
+            ? `${window.location.origin}/auth/callback?redirect=${returnTo}&plan=${planId}&billing=${billing}`
+            : `${window.location.origin}/auth/callback?redirect=/dashboard`,
         },
       })
 
@@ -82,7 +95,11 @@ export default function SignUpPage() {
         
         if (data.user.email_confirmed_at) {
           // Email already confirmed (might be duplicate signup)
-          window.location.href = '/dashboard'
+          if (returnTo) {
+            window.location.href = `${returnTo}?plan=${planId}&billing=${billing}`
+          } else {
+            window.location.href = '/dashboard'
+          }
         } else {
           // Show email confirmation step
           setStep(2)
@@ -106,7 +123,9 @@ export default function SignUpPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirect=/dashboard`,
+          redirectTo: returnTo 
+            ? `${window.location.origin}/auth/callback?redirect=${returnTo}&plan=${planId}&billing=${billing}`
+            : `${window.location.origin}/auth/callback?redirect=/dashboard`,
         },
       })
 
@@ -236,15 +255,32 @@ export default function SignUpPage() {
             </div>
             
             <h2 className="text-h2 text-text-primary mb-2">
-              Create your account
+              {planId ? 'Complete Your Purchase' : 'Create your account'}
             </h2>
             <p className="text-text-secondary">
-              Already have an account?{' '}
-              <Link href="/auth/signin" className="text-primary-blue hover:text-indigo-light micro-transition">
-                Sign in
-              </Link>
+              {planId ? (
+                <>Create an account to continue with your {planId} plan</>
+              ) : (
+                <>Already have an account?{' '}
+                  <Link href="/auth/signin" className="text-primary-blue hover:text-indigo-light micro-transition">
+                    Sign in
+                  </Link>
+                </>
+              )}
             </p>
           </div>
+
+          {planId && (
+            <div className="bg-primary-blue/10 border border-primary-blue/20 rounded-8dp p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-primary-blue font-medium capitalize">{planId} Plan</p>
+                  <p className="text-text-secondary text-sm">{billing === 'annual' ? 'Annual billing' : 'Monthly billing'}</p>
+                </div>
+                <span className="text-primary-blue text-sm">7-day free trial</span>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="bg-error-red/10 border border-error-red/20 rounded-8dp p-4 mb-6">
@@ -312,7 +348,7 @@ export default function SignUpPage() {
                   Creating account...
                 </div>
               ) : (
-                'Create Account'
+                planId ? 'Create Account & Continue' : 'Create Account'
               )}
             </button>
           </form>
@@ -369,6 +405,18 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-bg-dark flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div>
+      </div>
+    }>
+      <SignUpForm />
+    </Suspense>
   )
 }
 

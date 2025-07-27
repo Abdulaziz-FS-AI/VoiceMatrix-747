@@ -6,6 +6,8 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const redirectTo = requestUrl.searchParams.get('redirect') || '/dashboard'
+  const planId = requestUrl.searchParams.get('plan')
+  const billing = requestUrl.searchParams.get('billing')
 
   if (code) {
     const cookieStore = cookies()
@@ -20,8 +22,15 @@ export async function GET(request: NextRequest) {
       }
 
       if (data.user) {
-        // User authenticated successfully - redirect to dashboard
-        return NextResponse.redirect(new URL(redirectTo, request.url))
+        // User authenticated successfully 
+        let finalRedirect = redirectTo
+        
+        // If coming from payment flow, include plan parameters
+        if (planId && billing && redirectTo.includes('/checkout')) {
+          finalRedirect = `${redirectTo}?plan=${planId}&billing=${billing}`
+        }
+        
+        return NextResponse.redirect(new URL(finalRedirect, request.url))
       }
     } catch (error) {
       console.error('Unexpected auth error:', error)

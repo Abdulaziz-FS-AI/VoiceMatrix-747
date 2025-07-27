@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       
       const systemPrompt = VoiceMatrixPromptSystem.generatePrompt(promptConfig)
       const firstMessage = VoiceMatrixPromptSystem.generateFirstMessage(promptConfig)
-      const functions = VoiceMatrixPromptSystem.generateFunctions(promptConfig)
+      const tools = VoiceMatrixPromptSystem.generateFunctions(promptConfig, `${process.env.NEXT_PUBLIC_BASE_URL}/api/vapi/functions`)
       
       console.log('🚀 Generated 5-Pillar System Prompt:', {
         persona,
@@ -146,9 +146,9 @@ export async function POST(request: NextRequest) {
         name: `${businessContext.name} AI Receptionist`,
         systemPrompt,
         firstMessage,
-        functions,
-        serverUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/vapi/functions`,
-        serverUrlSecret: process.env.VAPI_WEBHOOK_SECRET
+        tools,
+        serverUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/vapi/webhooks`,
+        transferPhoneNumber
       })
 
       // 6. Create phone number

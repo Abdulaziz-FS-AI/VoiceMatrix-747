@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerComponentClient } from '@/lib/supabase'
-import { VapiClient, generateSystemPrompt, getFirstMessage, getAdvancedFunctions } from '@/lib/vapi'
+import { VapiClient } from '@/lib/vapi'
+import { VoiceMatrixPromptSystem } from '@/lib/assistant-prompts'
 
 export async function PUT(
   request: NextRequest,
@@ -43,15 +44,23 @@ export async function PUT(
     const business = assistant.businesses
 
     try {
-      // 2. Regenerate prompt using 5-pillar system
-      const systemPrompt = generateSystemPrompt(
-        assistant.persona, 
-        business, 
-        assistant.transfer_phone_number,
+      // 2. Regenerate prompt using 5-pillar system with new tools format
+      const promptConfig = {
+        persona: assistant.persona,
+        transferPhoneNumber: assistant.transfer_phone_number,
+        businessContext: {
+          name: business.name,
+          address: business.address,
+          website: business.website,
+          hours_of_operation: business.hours_of_operation,
+          persona: assistant.persona
+        },
         customInstructions
-      )
-      const firstMessage = getFirstMessage(assistant.persona, business.name)
-      const functions = getAdvancedFunctions(assistant.persona)
+      }
+      
+      const systemPrompt = VoiceMatrixPromptSystem.generatePrompt(promptConfig)
+      const firstMessage = VoiceMatrixPromptSystem.generateFirstMessage(promptConfig)
+      const tools = VoiceMatrixPromptSystem.generateFunctions(promptConfig, `${process.env.NEXT_PUBLIC_BASE_URL}/api/vapi/functions`)
 
       console.log('🔄 Regenerating 5-Pillar Prompt:', {
         assistantId,
@@ -65,8 +74,13 @@ export async function PUT(
       const vapi = new VapiClient(process.env.VAPI_API_KEY!)
       await vapi.updateAssistant(assistant.vapi_assistant_id, {
         model: {
-          systemPrompt,
-          functions
+          messages: [
+            {
+              role: "system" as const,
+              content: systemPrompt
+            }
+          ],
+          tools
         },
         firstMessage
       })
@@ -79,7 +93,7 @@ export async function PUT(
             ...assistant.configuration,
             systemPrompt,
             firstMessage,
-            functions,
+            tools,
             promptGenerated: new Date().toISOString(),
             pillarsUsed: ['identity', 'behavior', 'capabilities', 'knowledge', 'callFlow'],
             customInstructions: customInstructions || null,
@@ -100,6 +114,7 @@ export async function PUT(
         promptInfo: {
           length: systemPrompt.length,
           pillarsUsed: 5,
+          toolsCount: tools.length,
           customInstructions: !!customInstructions
         }
       })
@@ -174,7 +189,7 @@ export async function GET(
       },
       currentPrompt: config.systemPrompt,
       firstMessage: config.firstMessage,
-      functions: config.functions
+      tools: config.tools || config.functions
     })
 
   } catch (error) {

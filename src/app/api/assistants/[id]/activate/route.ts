@@ -1,7 +1,8 @@
 import { createServerComponentClient } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { VapiClient, generateSystemPrompt, getFirstMessage, getAdvancedFunctions } from '@/lib/vapi'
+import { VapiClient } from '@/lib/vapi'
+import { VoiceMatrixPromptSystem } from '@/lib/assistant-prompts'
 
 export async function POST(
   request: NextRequest,
@@ -54,19 +55,22 @@ export async function POST(
     // Initialize Vapi client
     const vapiClient = new VapiClient(process.env.VAPI_API_KEY!)
 
-    // Generate system prompt based on configuration
-    const systemPrompt = generateSystemPrompt(
-      'general', // Use general persona as fallback
-      businessInfo,
-      assistant.phone_number || '+1234567890'
-    )
+    // Generate system prompt based on configuration using new format
+    const promptConfig = {
+      persona: 'general',
+      transferPhoneNumber: assistant.phone_number || '+1234567890',
+      businessContext: {
+        name: businessInfo.name,
+        address: businessInfo.address,
+        website: businessInfo.website,
+        hours_of_operation: businessInfo.hours_of_operation,
+        persona: 'general' as const
+      }
+    }
 
-    const firstMessage = getFirstMessage(
-      'general',
-      businessInfo.name
-    )
-
-    const functions = getAdvancedFunctions('general')
+    const systemPrompt = VoiceMatrixPromptSystem.generatePrompt(promptConfig)
+    const firstMessage = VoiceMatrixPromptSystem.generateFirstMessage(promptConfig)
+    const tools = VoiceMatrixPromptSystem.generateFunctions(promptConfig, `${process.env.NEXT_PUBLIC_BASE_URL}/api/vapi/functions`)
 
     // Create Vapi assistant
     const vapiAssistant = await vapiClient.createAssistant({
@@ -74,9 +78,9 @@ export async function POST(
       systemPrompt,
       voiceId: '21m00Tcm4TlvDq8ikWAM', // Default voice
       firstMessage,
-      functions,
-      serverUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/vapi/functions`,
-      serverUrlSecret: process.env.VAPI_WEBHOOK_SECRET
+      tools,
+      serverUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/vapi/webhooks`,
+      transferPhoneNumber: assistant.phone_number || '+1234567890'
     })
 
     // Create phone number

@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import PricingSection from "@/components/landing/PricingSection";
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -85,12 +86,12 @@ export default function Home() {
               >
                 Sign In
               </button>
-              <button 
-                onClick={() => router.push('/auth/signup')}
+              <a 
+                href="#pricing"
                 className="btn-primary"
               >
-                Start Free Trial
-              </button>
+                Get Started
+              </a>
             </div>
           </div>
         </div>
@@ -111,12 +112,12 @@ export default function Home() {
               capture every lead, and provide instant customer support while you focus on growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16 fade-in-up-delay-2">
-              <button 
-                onClick={() => router.push('/auth/signup')}
+              <a 
+                href="#pricing"
                 className="btn-primary text-lg px-8 py-4 w-full sm:w-auto pulse-glow"
               >
-                📞 Start Free Trial
-              </button>
+                📞 Get Started Today
+              </a>
               <button className="btn-secondary text-lg px-8 py-4 w-full sm:w-auto">
                 🎥 Watch Demo
               </button>
@@ -298,6 +299,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <PricingSection />
+
       {/* Testimonials Section */}
       <section className="py-32dp px-4 sm:px-6 lg:px-8 bg-bg-surface">
         <div className="max-w-6xl mx-auto">
@@ -348,18 +352,18 @@ export default function Home() {
             improve customer service, and never miss another important call.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <button 
-              onClick={() => router.push('/auth/signup')}
+            <a 
+              href="#pricing"
               className="btn-primary text-lg px-8 py-4 pulse-glow"
             >
-              📞 Start Free 14-Day Trial
-            </button>
+              📞 Choose Your Plan
+            </a>
             <button className="btn-secondary text-lg px-8 py-4">
               📅 Schedule Demo
             </button>
           </div>
           <p className="text-sm text-text-disabled mt-6">
-            No credit card required • Cancel anytime • Setup in under 5 minutes
+            7-day free trial included • Cancel anytime • Setup in under 5 minutes
           </p>
         </div>
       </section>

@@ -322,17 +322,24 @@ export function generateAdvancedFirstMessage(config: AssistantConfiguration): st
 }
 
 /**
- * Generate function definitions with enhanced descriptions
+ * Generate Vapi apiRequest tools with enhanced descriptions
  */
-export function generateAdvancedFunctions(config: AssistantConfiguration) {
-  const { persona } = config
+export function generateAdvancedFunctions(config: AssistantConfiguration, serverUrl: string = '') {
+  const { persona, transferPhoneNumber } = config
   const capabilities = FUNCTIONAL_CAPABILITIES[persona as keyof typeof FUNCTIONAL_CAPABILITIES]
   
   return [
     {
+      type: "apiRequest" as const,
       name: "searchKnowledgeBase",
       description: `Search the business knowledge base for specific information. Use this when you need details about: ${(capabilities as any).knowledge || 'Access specialized knowledge when needed'}`,
-      parameters: {
+      url: `${serverUrl}/knowledge`,
+      method: "POST" as const,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.VAPI_WEBHOOK_SECRET}`
+      },
+      body: {
         type: "object",
         properties: {
           query: { 
@@ -341,22 +348,33 @@ export function generateAdvancedFunctions(config: AssistantConfiguration) {
           }
         },
         required: ["query"]
-      }
+      },
+      timeoutSeconds: 15
     },
     {
+      type: "apiRequest" as const,
       name: "transferCall",
       description: `Transfer the call to a human team member. Use this when: the caller requests human assistance, you cannot find needed information after searching, or the situation requires human judgment`,
-      parameters: {
+      url: `${serverUrl}/transfer`,
+      method: "POST" as const,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.VAPI_WEBHOOK_SECRET}`
+      },
+      body: {
         type: "object",
         properties: {
           reason: { 
             type: "string", 
             description: "Clear explanation of why you're transferring the call and what the human should know" 
           },
+          phoneNumber: {
+            type: "string",
+            description: "Phone number to transfer to"
+          },
           urgency: {
             type: "string",
-            enum: ["low", "medium", "high"],
-            description: "Urgency level of the transfer"
+            description: "Urgency level: low, medium, or high"
           },
           callerInfo: {
             type: "string",
@@ -364,7 +382,54 @@ export function generateAdvancedFunctions(config: AssistantConfiguration) {
           }
         },
         required: ["reason"]
-      }
+      },
+      timeoutSeconds: 20
+    },
+    {
+      type: "apiRequest" as const,
+      name: "scheduleAppointment",
+      description: "Schedule an appointment for the customer when they want to book services or consultations",
+      url: `${serverUrl}/schedule`,
+      method: "POST" as const,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.VAPI_WEBHOOK_SECRET}`
+      },
+      body: {
+        type: "object",
+        properties: {
+          customerName: { 
+            type: "string",
+            description: "Customer's full name"
+          },
+          customerPhone: { 
+            type: "string",
+            description: "Customer's phone number"
+          },
+          customerEmail: { 
+            type: "string",
+            description: "Customer's email address"
+          },
+          preferredDate: { 
+            type: "string",
+            description: "Preferred appointment date"
+          },
+          preferredTime: { 
+            type: "string",
+            description: "Preferred appointment time"
+          },
+          serviceType: { 
+            type: "string",
+            description: "Type of service or consultation requested"
+          },
+          notes: {
+            type: "string",
+            description: "Additional notes or special requests"
+          }
+        },
+        required: ["customerName", "customerPhone"]
+      },
+      timeoutSeconds: 20
     }
   ]
 }
