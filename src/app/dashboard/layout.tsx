@@ -211,11 +211,7 @@ export default function DashboardLayout({
             </button>
 
             <div className="flex items-center space-x-4">
-              {/* Quick actions will go here */}
-              <Link href="/dashboard/assistants/new" className="btn-primary hidden sm:inline-flex">
-                <span className="text-sm">🎯</span>
-                <span className="ml-2">Create Assistant</span>
-              </Link>
+              {/* Quick actions removed - they're now in the dashboard itself */}
             </div>
           </div>
         </div>

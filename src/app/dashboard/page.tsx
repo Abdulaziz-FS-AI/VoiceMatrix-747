@@ -256,15 +256,15 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="min-h-full">
       {/* Header */}
-      <div className="px-8 py-6 border-b border-border-subtle/20 bg-gradient-to-r from-bg-surface/50 to-bg-surface/30 backdrop-blur-sm">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <div className="px-6 py-4 border-b border-border-subtle bg-bg-surface/50">
+        <div className="flex items-center justify-between">
           <div className="fade-in-up">
-            <h1 className="text-2xl font-semibold text-text-primary mb-1">
+            <h1 className="text-2xl font-semibold text-text-primary">
               Dashboard
             </h1>
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-sm mt-1">
               Monitor your AI receptionists and business performance
             </p>
           </div>
@@ -272,7 +272,7 @@ export default function DashboardPage() {
           {/* Status Indicators */}
           <div className="flex items-center space-x-4 fade-in-up-delay">
             {liveCallCount > 0 && (
-              <div className="flex items-center space-x-2 px-4 py-2 bg-primary-blue/10 rounded-lg border border-primary-blue/20 backdrop-blur-sm">
+              <div className="flex items-center space-x-2 px-3 py-2 bg-primary-blue/10 rounded-lg border border-primary-blue/20">
                 <div className="w-2 h-2 bg-primary-blue rounded-full live-indicator"></div>
                 <span className="text-sm text-primary-blue font-medium">
                   <AnimatedCounter value={liveCallCount} /> live call{liveCallCount !== 1 ? 's' : ''}
@@ -280,7 +280,7 @@ export default function DashboardPage() {
               </div>
             )}
             
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-bg-surface/80 border border-border-subtle/30 backdrop-blur-sm">
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-bg-surface border border-border-subtle">
               <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected ? 'bg-success-green live-indicator' : 'bg-error-red'}`}></div>
               <span className="text-xs text-text-secondary font-medium">
                 {isConnected ? 'Live' : 'Offline'}
@@ -291,63 +291,62 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto bg-gradient-to-br from-bg-primary via-bg-primary to-bg-surface/50">
-        <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div className="p-6 space-y-6">
 
-          {/* Quick Stats Section */}
-          <section className="fade-in-up">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-text-primary">Overview</h2>
-              <Link 
-                href="/dashboard/analytics" 
-                className="text-sm text-primary-blue hover:text-primary-blue/80 font-medium transition-colors duration-200 flex items-center space-x-1"
-              >
-                <span>View detailed analytics</span>
-                <span>→</span>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard
-                title="Calls Today"
-                value={metrics.callsToday}
-                change="+12 from yesterday"
-                trend="up"
-                icon="📞"
-                index={0}
-                isLive={liveCallCount > 0}
-              />
-              <MetricCard
-                title="Leads Captured"
-                value={metrics.leadsCapured}
-                change="+5 from yesterday"
-                trend="up"
-                icon="🎯"
-                index={1}
-              />
-              <MetricCard
-                title="Avg Response Time"
-                value="2.1s"
-                change="-0.3s from yesterday"
-                trend="up"
-                icon="⚡"
-                index={2}
-              />
-              <MetricCard
-                title="Assistant Uptime"
-                value="99.8%"
-                change="All systems active"
-                trend="neutral"
-                icon="✅"
-                index={3}
-                isLive={isConnected}
-              />
-            </div>
-          </section>
+        {/* Quick Stats Section */}
+        <section className="fade-in-up">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-text-primary">Overview</h2>
+            <Link 
+              href="/dashboard/analytics" 
+              className="text-sm text-primary-blue hover:text-primary-blue/80 font-medium transition-colors duration-200 flex items-center space-x-1"
+            >
+              <span>View detailed analytics</span>
+              <span>→</span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <MetricCard
+              title="Calls Today"
+              value={metrics.callsToday}
+              change="+12 from yesterday"
+              trend="up"
+              icon="📞"
+              index={0}
+              isLive={liveCallCount > 0}
+            />
+            <MetricCard
+              title="Leads Captured"
+              value={metrics.leadsCapured}
+              change="+5 from yesterday"
+              trend="up"
+              icon="🎯"
+              index={1}
+            />
+            <MetricCard
+              title="Avg Response Time"
+              value="2.1s"
+              change="-0.3s from yesterday"
+              trend="up"
+              icon="⚡"
+              index={2}
+            />
+            <MetricCard
+              title="Assistant Uptime"
+              value="99.8%"
+              change="All systems active"
+              trend="neutral"
+              icon="✅"
+              index={3}
+              isLive={isConnected}
+            />
+          </div>
+        </section>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Recent Activity */}
-            <section className="lg:col-span-2 fade-in-up-delay-2">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Activity */}
+          <section className="lg:col-span-2 fade-in-up-delay-2">
               <div className="card">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-text-primary flex items-center space-x-2">
@@ -386,8 +385,8 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* Sidebar */}
-            <aside className="space-y-6 fade-in-up-delay-3">
+          {/* Sidebar */}
+          <aside className="space-y-6 fade-in-up-delay-3">
               {/* Quick Actions Card */}
               <div className="card hover-lift">
                 <div className="flex items-center justify-between mb-5">
@@ -450,9 +449,8 @@ export default function DashboardPage() {
                 )}
               </div>
             )}
-              </div>
-            </aside>
-          </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
