@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@/lib/supabase'
+import Link from 'next/link'
 
 // Temporary placeholder components - we'll build these properly
 const MetricCard = ({ 
@@ -229,10 +230,10 @@ export default function DashboardPage() {
           <div className="card">
             <h3 className="text-h3 text-text-primary mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <button className="btn-primary w-full">
+              <Link href="/dashboard/assistants/new" className="btn-primary w-full">
                 <span>🎯</span>
                 <span className="ml-2">Create Assistant</span>
-              </button>
+              </Link>
               <button className="btn-secondary w-full">
                 <span>📞</span>
                 <span className="ml-2">Test Call</span>
@@ -251,9 +252,9 @@ export default function DashboardPage() {
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🤖</div>
                 <p className="text-text-secondary mb-4">No assistants yet</p>
-                <button className="btn-primary">
+                <Link href="/dashboard/assistants/new" className="btn-primary">
                   Create Your First Assistant
-                </button>
+                </Link>
               </div>
             ) : (
               <div className="space-y-3">

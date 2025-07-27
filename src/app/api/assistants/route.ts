@@ -13,6 +13,58 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    
+    // Support both old and new format
+    const isWizardFormat = body.businessId && body.name && body.persona
+    
+    if (isWizardFormat) {
+      // Handle wizard format for simplified schema
+      const { businessId, name, persona, transferPhoneNumber, voiceId, greetingMessage, personality, status } = body
+      
+      // Validate required fields
+      if (!name || !persona || !transferPhoneNumber) {
+        return NextResponse.json(
+          { error: 'Missing required fields' }, 
+          { status: 400 }
+        )
+      }
+
+      // Get user's profile to get business info
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profile) {
+        return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+      }
+
+      const businessName = profile.business_info?.name || user.email?.split('@')[0] || 'Business'
+
+      // Create assistant record using simplified schema
+      const { data: assistant, error } = await supabase
+        .from('assistants')
+        .insert({
+          user_id: user.id,
+          name,
+          description: `AI Receptionist for ${businessName}`,
+          status: status || 'configuring',
+          // Store additional data in a metadata field if it exists, or in description
+          phone_number: transferPhoneNumber
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Failed to create assistant:', error)
+        return NextResponse.json({ error: 'Failed to create assistant' }, { status: 500 })
+      }
+
+      return NextResponse.json(assistant)
+    }
+    
+    // Handle legacy format
     const { persona, transferPhoneNumber, name, customInstructions } = body
 
     // Validate required fields
