@@ -137,7 +137,6 @@
     @apply bg-gradient-to-br from-bg-surface to-bg-surface/50;
     @apply backdrop-blur-sm;
     @apply hover:scale-[1.02] hover:shadow-xl hover:shadow-primary-blue/10;
-    @apply group;
   }
 
   /* Glass morphism effect */
