@@ -256,92 +256,114 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex justify-between items-start fade-in-up">
-        <div>
-          <h1 className="text-h1 text-text-primary bg-gradient-to-r from-text-primary to-primary-blue bg-clip-text">
-            Dashboard
-          </h1>
-          <p className="text-text-secondary mt-2">
-            Monitor your AI receptionists and business performance
-          </p>
-        </div>
-        
-        {/* Real-time Status */}
-        <div className="flex items-center space-x-4 fade-in-up-delay">
-          {liveCallCount > 0 && (
-            <div className="flex items-center space-x-2 px-4 py-2 bg-primary-blue/10 rounded-full border border-primary-blue/20 glass-card">
-              <div className="w-2 h-2 bg-primary-blue rounded-full live-indicator"></div>
-              <span className="text-sm text-primary-blue font-medium">
-                <AnimatedCounter value={liveCallCount} /> live call{liveCallCount !== 1 ? 's' : ''}
+      <div className="px-8 py-6 border-b border-border-subtle/20 bg-gradient-to-r from-bg-surface/50 to-bg-surface/30 backdrop-blur-sm">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="fade-in-up">
+            <h1 className="text-2xl font-semibold text-text-primary mb-1">
+              Dashboard
+            </h1>
+            <p className="text-text-secondary text-sm">
+              Monitor your AI receptionists and business performance
+            </p>
+          </div>
+          
+          {/* Status Indicators */}
+          <div className="flex items-center space-x-4 fade-in-up-delay">
+            {liveCallCount > 0 && (
+              <div className="flex items-center space-x-2 px-4 py-2 bg-primary-blue/10 rounded-lg border border-primary-blue/20 backdrop-blur-sm">
+                <div className="w-2 h-2 bg-primary-blue rounded-full live-indicator"></div>
+                <span className="text-sm text-primary-blue font-medium">
+                  <AnimatedCounter value={liveCallCount} /> live call{liveCallCount !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
+            
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-bg-surface/80 border border-border-subtle/30 backdrop-blur-sm">
+              <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected ? 'bg-success-green live-indicator' : 'bg-error-red'}`}></div>
+              <span className="text-xs text-text-secondary font-medium">
+                {isConnected ? 'Live' : 'Offline'}
               </span>
             </div>
-          )}
-          
-          <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-bg-surface border border-border-subtle">
-            <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected ? 'bg-success-green live-indicator' : 'bg-error-red'}`}></div>
-            <span className="text-xs text-text-secondary font-medium">
-              {isConnected ? 'Live' : 'Offline'}
-            </span>
           </div>
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Calls Today"
-          value={metrics.callsToday}
-          change="+12 from yesterday"
-          trend="up"
-          icon="📞"
-          index={0}
-          isLive={liveCallCount > 0}
-        />
-        <MetricCard
-          title="Leads Captured"
-          value={metrics.leadsCapured}
-          change="+5 from yesterday"
-          trend="up"
-          icon="🎯"
-          index={1}
-        />
-        <MetricCard
-          title="Avg Response Time"
-          value="2.1s"
-          change="-0.3s from yesterday"
-          trend="up"
-          icon="⚡"
-          index={2}
-        />
-        <MetricCard
-          title="Assistant Uptime"
-          value="99.8%"
-          change="All systems active"
-          trend="neutral"
-          icon="✅"
-          index={3}
-          isLive={isConnected}
-        />
-      </div>
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto bg-gradient-to-br from-bg-primary via-bg-primary to-bg-surface/50">
+        <div className="p-8 max-w-7xl mx-auto space-y-8">
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 fade-in-up-delay-2">
-          <div className="card">
+          {/* Quick Stats Section */}
+          <section className="fade-in-up">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-h3 text-text-primary flex items-center space-x-2">
-                <span>Recent Activity</span>
-                {recentActivity.length > 0 && (
-                  <div className="w-2 h-2 bg-primary-blue rounded-full pulse-scale"></div>
-                )}
-              </h2>
-              <Link href="/dashboard/calls" className="text-primary-blue hover:text-indigo-light text-sm font-medium transition-colors duration-200">
-                View all →
+              <h2 className="text-lg font-semibold text-text-primary">Overview</h2>
+              <Link 
+                href="/dashboard/analytics" 
+                className="text-sm text-primary-blue hover:text-primary-blue/80 font-medium transition-colors duration-200 flex items-center space-x-1"
+              >
+                <span>View detailed analytics</span>
+                <span>→</span>
               </Link>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <MetricCard
+                title="Calls Today"
+                value={metrics.callsToday}
+                change="+12 from yesterday"
+                trend="up"
+                icon="📞"
+                index={0}
+                isLive={liveCallCount > 0}
+              />
+              <MetricCard
+                title="Leads Captured"
+                value={metrics.leadsCapured}
+                change="+5 from yesterday"
+                trend="up"
+                icon="🎯"
+                index={1}
+              />
+              <MetricCard
+                title="Avg Response Time"
+                value="2.1s"
+                change="-0.3s from yesterday"
+                trend="up"
+                icon="⚡"
+                index={2}
+              />
+              <MetricCard
+                title="Assistant Uptime"
+                value="99.8%"
+                change="All systems active"
+                trend="neutral"
+                icon="✅"
+                index={3}
+                isLive={isConnected}
+              />
+            </div>
+          </section>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Recent Activity */}
+            <section className="lg:col-span-2 fade-in-up-delay-2">
+              <div className="card">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-text-primary flex items-center space-x-2">
+                    <span>Recent Activity</span>
+                    {recentActivity.length > 0 && (
+                      <div className="w-2 h-2 bg-primary-blue rounded-full pulse-scale"></div>
+                    )}
+                  </h3>
+                  <Link 
+                    href="/dashboard/calls" 
+                    className="text-sm text-primary-blue hover:text-primary-blue/80 font-medium transition-colors duration-200 flex items-center space-x-1"
+                  >
+                    <span>View all</span>
+                    <span>→</span>
+                  </Link>
+                </div>
             <div className="space-y-0">
               {recentActivity.length > 0 ? (
                 recentActivity.map((activity, index) => (
@@ -361,39 +383,39 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
+              </div>
+            </section>
 
-        {/* Quick Actions */}
-        <div className="space-y-6 fade-in-up-delay-3">
-          {/* Quick Actions Card */}
-          <div className="card hover:scale-[1.02] transition-transform duration-300">
-            <h3 className="text-h3 text-text-primary mb-4 flex items-center space-x-2">
-              <span>Quick Actions</span>
-              <span className="text-lg">⚡</span>
-            </h3>
-            <div className="space-y-3">
-              <Link href="/dashboard/assistants/new" className="btn-primary w-full group">
-                <span className="group-hover:scale-110 transition-transform duration-200">🎯</span>
-                <span className="ml-2">Create Assistant</span>
-              </Link>
-              <button className="btn-secondary w-full group">
-                <span className="group-hover:scale-110 transition-transform duration-200">📞</span>
-                <span className="ml-2">Test Call</span>
-              </button>
-              <Link href="/dashboard/analytics" className="btn-secondary w-full group">
-                <span className="group-hover:scale-110 transition-transform duration-200">📊</span>
-                <span className="ml-2">View Analytics</span>
-              </Link>
-            </div>
-          </div>
+            {/* Sidebar */}
+            <aside className="space-y-6 fade-in-up-delay-3">
+              {/* Quick Actions Card */}
+              <div className="card hover-lift">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-semibold text-text-primary">Quick Actions</h3>
+                  <span className="text-lg">⚡</span>
+                </div>
+                <div className="space-y-3">
+                  <Link href="/dashboard/assistants/new" className="btn-primary w-full group">
+                    <span className="group-hover:scale-110 transition-transform duration-200">🎯</span>
+                    <span className="ml-2">Create Assistant</span>
+                  </Link>
+                  <button className="btn-secondary w-full group">
+                    <span className="group-hover:scale-110 transition-transform duration-200">📞</span>
+                    <span className="ml-2">Test Call</span>
+                  </button>
+                  <Link href="/dashboard/analytics" className="btn-secondary w-full group">
+                    <span className="group-hover:scale-110 transition-transform duration-200">📊</span>
+                    <span className="ml-2">View Analytics</span>
+                  </Link>
+                </div>
+              </div>
 
-          {/* Assistant Status */}
-          <div className="card hover:scale-[1.02] transition-transform duration-300">
-            <h3 className="text-h3 text-text-primary mb-4 flex items-center space-x-2">
-              <span>Assistant Status</span>
-              <span className="text-lg">🤖</span>
-            </h3>
+              {/* Assistant Status */}
+              <div className="card hover-lift">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-semibold text-text-primary">Assistant Status</h3>
+                  <span className="text-lg">🤖</span>
+                </div>
             {assistants.length === 0 ? (
               <div className="text-center py-8 fade-in-up">
                 <div className="text-4xl mb-4 floating">🤖</div>
@@ -428,6 +450,8 @@ export default function DashboardPage() {
                 )}
               </div>
             )}
+              </div>
+            </aside>
           </div>
         </div>
       </div>
