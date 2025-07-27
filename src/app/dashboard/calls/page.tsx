@@ -171,13 +171,18 @@ export default function CallHistoryPage() {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
+        dateRange: filters.dateRange,
         ...(filters.status !== 'all' && { status: filters.status }),
         ...(filters.assistant !== 'all' && { assistantId: filters.assistant }),
         ...(filters.leadOnly && { leadOnly: 'true' })
       })
 
+      console.log('Fetching calls with params:', params.toString())
+      
       const response = await fetch(`/api/call-logs?${params}`)
       const data = await response.json()
+
+      console.log('API response:', data)
 
       if (response.ok) {
         setCalls(data.callLogs || [])
@@ -186,10 +191,13 @@ export default function CallHistoryPage() {
           total: data.totalCount || 0
         }))
       } else {
-        console.error('Failed to fetch call logs:', data.error)
+        console.error('Failed to fetch call logs:', data.error, data.details)
+        // Show error to user
+        alert(`Failed to fetch call logs: ${data.error}${data.details ? ` - ${data.details}` : ''}`)
       }
     } catch (error) {
       console.error('Call logs fetch error:', error)
+      alert('Network error while fetching call logs')
     } finally {
       setLoading(false)
     }
@@ -205,9 +213,32 @@ export default function CallHistoryPage() {
         .select('id, name')
         .eq('user_id', user.id)
 
+      console.log('Fetched assistants:', assistantsData)
       setAssistants(assistantsData || [])
     } catch (error) {
       console.error('Failed to fetch assistants:', error)
+    }
+  }
+
+  const createTestCallLog = async () => {
+    try {
+      const response = await fetch('/api/test-call-logs', {
+        method: 'POST'
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        console.log('Created test calls:', data)
+        alert(data.message)
+        fetchCalls() // Refresh the list
+      } else {
+        console.error('Failed to create test calls:', data.error)
+        alert(`Failed to create test calls: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('Error creating test calls:', error)
+      alert('Error creating test calls')
     }
   }
 
@@ -316,13 +347,25 @@ export default function CallHistoryPage() {
           <p className="text-sm text-text-secondary">
             <AnimatedCounter value={pagination.total} /> total calls
           </p>
-          <button
-            onClick={() => fetchCalls()}
-            className="btn-secondary hover:scale-105 transition-transform duration-200"
-          >
-            <span>🔄</span>
-            <span className="ml-2">Refresh</span>
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => fetchCalls()}
+              className="btn-secondary hover:scale-105 transition-transform duration-200"
+            >
+              <span>🔄</span>
+              <span className="ml-2">Refresh</span>
+            </button>
+            
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={createTestCallLog}
+                className="btn-primary hover:scale-105 transition-transform duration-200"
+              >
+                <span>🧪</span>
+                <span className="ml-2">Create Test Call</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -337,11 +380,29 @@ export default function CallHistoryPage() {
         <div className="card text-center py-12 fade-in-up-delay-3">
           <div className="text-4xl mb-4 opacity-50">📞</div>
           <h3 className="text-lg font-medium text-text-primary mb-2">No calls found</h3>
-          <p className="text-text-secondary">
+          <p className="text-text-secondary mb-4">
             {filters.status !== 'all' || filters.assistant !== 'all' || filters.leadOnly
               ? 'Try adjusting your filters to see more results.'
               : 'Calls will appear here once your assistants start receiving them.'}
           </p>
+          
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-6 p-4 bg-bg-dark rounded-8dp text-left">
+              <h4 className="text-sm font-medium text-text-primary mb-2">🐛 Debug Info:</h4>
+              <div className="text-xs text-text-secondary space-y-1">
+                <p>• Total assistants: {assistants.length}</p>
+                <p>• Filters: {JSON.stringify(filters)}</p>
+                <p>• Pagination: {JSON.stringify(pagination)}</p>
+                <p>• Check browser console for API logs</p>
+              </div>
+              <button
+                onClick={createTestCallLog}
+                className="btn-primary text-sm mt-3"
+              >
+                Create Test Call Log
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <>
