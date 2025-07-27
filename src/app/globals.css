@@ -57,6 +57,11 @@
     @apply bg-bg-dark text-text-primary font-sans antialiased;
     @apply transition-colors duration-200 ease-in-out;
   }
+
+  /* Remove underlines from all links by default */
+  a {
+    @apply no-underline;
+  }
   
   /* Voice Matrix Design System Base Styles */
   h1 {
@@ -96,6 +101,7 @@
     @apply hover:bg-indigo-light active:bg-indigo-dark;
     @apply transition-colors duration-200 ease-in-out;
     @apply flex items-center justify-center gap-8dp;
+    @apply no-underline;
   }
   
   /* Secondary Button */
@@ -105,6 +111,7 @@
     @apply hover:bg-bg-surface;
     @apply transition-colors duration-200 ease-in-out;
     @apply flex items-center justify-center gap-8dp;
+    @apply no-underline;
   }
   
   /* Destructive Button */
@@ -119,7 +126,25 @@
   /* Card Component */
   .card {
     @apply bg-bg-surface border border-border-subtle rounded-12dp p-16dp;
-    @apply transition-all duration-200 ease-in-out;
+    @apply transition-all duration-300 ease-in-out;
+    @apply hover:shadow-lg hover:shadow-primary-blue/5 hover:border-primary-blue/20;
+    @apply hover:-translate-y-1;
+  }
+
+  /* Enhanced metric card */
+  .metric-card {
+    @apply card;
+    @apply bg-gradient-to-br from-bg-surface to-bg-surface/50;
+    @apply backdrop-blur-sm;
+    @apply hover:scale-[1.02] hover:shadow-xl hover:shadow-primary-blue/10;
+    @apply group;
+  }
+
+  /* Glass morphism effect */
+  .glass-card {
+    @apply backdrop-blur-md bg-white/5 border border-white/10;
+    @apply shadow-lg shadow-black/20;
+    @apply hover:bg-white/10 hover:border-white/20;
   }
   
   /* Input Field */
@@ -147,7 +172,7 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  /* Hero animations */
+  /* Enhanced entrance animations */
   .fade-in-up {
     animation: fadeInUp 0.8s ease-out forwards;
     opacity: 0;
@@ -165,9 +190,49 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
+  .fade-in-up-delay-3 {
+    animation: fadeInUp 0.8s ease-out 0.6s forwards;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  .fade-in-up-delay-4 {
+    animation: fadeInUp 0.8s ease-out 0.8s forwards;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  
+  /* Staggered grid animations */
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
+  .stagger-3 { animation-delay: 0.3s; }
+  .stagger-4 { animation-delay: 0.4s; }
+  .stagger-5 { animation-delay: 0.5s; }
+  .stagger-6 { animation-delay: 0.6s; }
   
   .pulse-glow {
     animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .pulse-scale {
+    animation: pulseScale 2s ease-in-out infinite;
+  }
+
+  .live-indicator {
+    animation: liveIndicator 1.5s ease-in-out infinite;
+  }
+
+  .number-counter {
+    animation: numberCounter 0.8s ease-out forwards;
+  }
+
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  .glow-effect {
+    animation: glowEffect 2s ease-in-out infinite alternate;
   }
   
   .slide-in-left {
@@ -180,6 +245,13 @@
     animation: slideInRight 0.6s ease-out forwards;
     opacity: 0;
     transform: translateX(50px);
+  }
+
+  /* Loading skeleton */
+  .skeleton {
+    @apply bg-gradient-to-r from-bg-surface via-border-subtle to-bg-surface;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
   }
 }
 
@@ -199,6 +271,64 @@
   50% {
     box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
     transform: scale(1.02);
+  }
+}
+
+@keyframes pulseScale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes liveIndicator {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes numberCounter {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes glowEffect {
+  from {
+    box-shadow: 0 0 5px rgba(79, 70, 229, 0.3);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.6), 0 0 30px rgba(79, 70, 229, 0.4);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
   }
 }
 

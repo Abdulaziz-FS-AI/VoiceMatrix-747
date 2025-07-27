@@ -171,7 +171,7 @@ export function QAStep() {
               />
             ))}
         </div>
-      ) : !isAdding ? (
+      ) : !isAdding && (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <div className="text-4xl mb-4">❓</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Q&A pairs yet</h3>

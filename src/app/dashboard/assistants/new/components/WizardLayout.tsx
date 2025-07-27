@@ -119,7 +119,7 @@ function AutoSaveIndicator() {
             Saving changes...
           </span>
         ) : (
-          `Last saved ${new Date(lastSaved).toLocaleTimeString()}`
+          `Last saved ${lastSaved ? new Date(lastSaved).toLocaleTimeString() : 'Never'}`
         )}
       </p>
     </div>

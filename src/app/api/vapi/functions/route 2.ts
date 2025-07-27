@@ -84,7 +84,6 @@ async function searchKnowledgeBase(vapiAssistantId: string, query: string) {
     // Fallback to business info
     const businessInfo = profile?.business_info
     if (businessInfo) {
-      const queryWords = query.toLowerCase().split(/\s+/)
       const businessContext = `
 Business Name: ${businessInfo.name || 'Our Business'}
 ${businessInfo.address ? `Address: ${businessInfo.address}` : ''}
@@ -162,4 +161,32 @@ async function generateEmbedding(text: string): Promise<number[]> {
 
   const data = await response.json()
   return data.data[0].embedding
+}
+
+function findQAMatch(query: string, qaPairs: any[]) {
+  const normalizedQuery = query.toLowerCase().trim()
+  
+  return qaPairs
+    .sort((a, b) => b.priority - a.priority)
+    .find(qa => {
+      const normalizedQuestion = qa.question.toLowerCase().trim()
+      
+      // Exact match
+      if (normalizedQuery === normalizedQuestion) {
+        return true
+      }
+      
+      // Contains match
+      if (normalizedQuery.includes(normalizedQuestion) || 
+          normalizedQuestion.includes(normalizedQuery)) {
+        return true
+      }
+      
+      // Keyword overlap
+      const queryWords = normalizedQuery.split(/\s+/).filter((w: string) => w.length > 3)
+      const questionWords = normalizedQuestion.split(/\s+/).filter((w: string) => w.length > 3)
+      const overlap = queryWords.filter(word => questionWords.includes(word)).length
+      
+      return overlap >= Math.min(queryWords.length, questionWords.length) * 0.6
+    })
 }

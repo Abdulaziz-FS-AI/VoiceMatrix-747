@@ -5,7 +5,7 @@ import { VapiClient, generateSystemPrompt, getFirstMessage, getAdvancedFunctions
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const cookieStore = cookies()
@@ -18,37 +18,21 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id: assistantId } = await params
+    const assistantId = params.id
 
-    // Get assistant info
+    // Get assistant with business info
     const { data: assistant, error: assistantError } = await supabase
       .from('assistants')
-      .select('*')
+      .select(`
+        *,
+        businesses!inner(*)
+      `)
       .eq('id', assistantId)
-      .eq('user_id', user.id)
+      .eq('businesses.user_id', user.id)
       .single()
 
     if (assistantError || !assistant) {
       return NextResponse.json({ error: 'Assistant not found' }, { status: 404 })
-    }
-
-    // Get user's business info from profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
-    }
-
-    // Create business context from profile
-    const businessInfo = {
-      name: profile.business_info?.name || user.email?.split('@')[0] || 'Business',
-      address: profile.business_info?.address || '',
-      website: profile.business_info?.website || '',
-      hours_of_operation: profile.business_info?.hours_of_operation || {}
     }
 
     // Initialize Vapi client
@@ -56,23 +40,23 @@ export async function POST(
 
     // Generate system prompt based on configuration
     const systemPrompt = generateSystemPrompt(
-      'general', // Use general persona as fallback
-      businessInfo,
-      assistant.phone_number || '+1234567890'
+      assistant.persona,
+      assistant.businesses,
+      assistant.transfer_phone_number
     )
 
     const firstMessage = getFirstMessage(
-      'general',
-      businessInfo.name
+      assistant.persona,
+      assistant.businesses.name
     )
 
-    const functions = getAdvancedFunctions('general')
+    const functions = getAdvancedFunctions(assistant.persona)
 
     // Create Vapi assistant
     const vapiAssistant = await vapiClient.createAssistant({
       name: assistant.name,
       systemPrompt,
-      voiceId: '21m00Tcm4TlvDq8ikWAM', // Default voice
+      voiceId: assistant.configuration?.voiceId,
       firstMessage,
       functions,
       serverUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/vapi/functions`,
@@ -89,7 +73,7 @@ export async function POST(
       .from('assistants')
       .update({
         vapi_assistant_id: vapiAssistant.id,
-        phone_number: phoneNumber.number,
+        vapi_phone_number_id: phoneNumber.id,
         status: 'active',
         updated_at: new Date().toISOString()
       })
@@ -113,9 +97,6 @@ export async function POST(
     
     // Update assistant status to error
     try {
-      const { id: assistantId } = await params
-      const cookieStore = cookies()
-      const supabase = createServerComponentClient(cookieStore)
       await supabase
         .from('assistants')
         .update({ status: 'error' })

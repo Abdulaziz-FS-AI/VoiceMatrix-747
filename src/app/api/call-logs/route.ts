@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     const formattedLogs = callLogs?.map(log => ({
       id: log.id,
       assistantId: log.assistant_id,
-      assistantName: log.assistants?.name || 'Unknown Assistant',
+      assistantName: (log as any).assistants?.name || 'Unknown Assistant',
       phoneNumber: log.phone_number,
       duration: log.duration,
       status: log.status,

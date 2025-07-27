@@ -329,100 +329,72 @@ export default function DashboardPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <div className="lg:col-span-2 fade-in-up-delay-2">
+        <div className="lg:col-span-2">
           <div className="card">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-h3 text-text-primary flex items-center space-x-2">
-                <span>Recent Activity</span>
-                {recentActivity.length > 0 && (
-                  <div className="w-2 h-2 bg-primary-blue rounded-full pulse-scale"></div>
-                )}
-              </h2>
-              <Link href="/dashboard/calls" className="text-primary-blue hover:text-indigo-light text-sm font-medium transition-colors duration-200">
-                View all →
-              </Link>
+              <h2 className="text-h3 text-text-primary">Recent Activity</h2>
+              <button className="text-primary-blue hover:text-indigo-light text-sm">
+                View all
+              </button>
             </div>
             <div className="space-y-0">
-              {recentActivity.length > 0 ? (
-                recentActivity.map((activity, index) => (
-                  <ActivityItem
-                    key={activity.id}
-                    time={activity.time}
-                    description={activity.description}
-                    type={activity.type}
-                    index={index}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-8 fade-in-up">
-                  <div className="text-4xl mb-4 opacity-50">📊</div>
-                  <p className="text-text-secondary">No recent activity</p>
-                  <p className="text-text-secondary text-sm mt-1">Activity will appear here as your assistants receive calls</p>
-                </div>
-              )}
+              {recentActivity.map((activity) => (
+                <ActivityItem
+                  key={activity.id}
+                  time={activity.time}
+                  description={activity.description}
+                  type={activity.type}
+                />
+              ))}
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="space-y-6 fade-in-up-delay-3">
+        <div className="space-y-6">
           {/* Quick Actions Card */}
-          <div className="card hover:scale-[1.02] transition-transform duration-300">
-            <h3 className="text-h3 text-text-primary mb-4 flex items-center space-x-2">
-              <span>Quick Actions</span>
-              <span className="text-lg">⚡</span>
-            </h3>
+          <div className="card">
+            <h3 className="text-h3 text-text-primary mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <Link href="/dashboard/assistants/new" className="btn-primary w-full group">
-                <span className="group-hover:scale-110 transition-transform duration-200">🎯</span>
+              <Link href="/dashboard/assistants/new" className="btn-primary w-full">
+                <span>🎯</span>
                 <span className="ml-2">Create Assistant</span>
               </Link>
-              <button className="btn-secondary w-full group">
-                <span className="group-hover:scale-110 transition-transform duration-200">📞</span>
+              <button className="btn-secondary w-full">
+                <span>📞</span>
                 <span className="ml-2">Test Call</span>
               </button>
-              <Link href="/dashboard/analytics" className="btn-secondary w-full group">
-                <span className="group-hover:scale-110 transition-transform duration-200">📊</span>
+              <Link href="/dashboard/analytics" className="btn-secondary w-full">
+                <span>📊</span>
                 <span className="ml-2">View Analytics</span>
               </Link>
             </div>
           </div>
 
           {/* Assistant Status */}
-          <div className="card hover:scale-[1.02] transition-transform duration-300">
-            <h3 className="text-h3 text-text-primary mb-4 flex items-center space-x-2">
-              <span>Assistant Status</span>
-              <span className="text-lg">🤖</span>
-            </h3>
+          <div className="card">
+            <h3 className="text-h3 text-text-primary mb-4">Assistant Status</h3>
             {assistants.length === 0 ? (
-              <div className="text-center py-8 fade-in-up">
-                <div className="text-4xl mb-4 floating">🤖</div>
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">🤖</div>
                 <p className="text-text-secondary mb-4">No assistants yet</p>
-                <Link href="/dashboard/assistants/new" className="btn-primary group">
-                  <span className="group-hover:scale-110 transition-transform duration-200">✨</span>
-                  <span className="ml-2">Create Your First Assistant</span>
+                <Link href="/dashboard/assistants/new" className="btn-primary">
+                  Create Your First Assistant
                 </Link>
               </div>
             ) : (
               <div className="space-y-3">
-                {assistants.slice(0, 3).map((assistant: any, index: number) => (
-                  <div 
-                    key={assistant.id} 
-                    className={`flex items-center justify-between p-3 bg-bg-dark rounded-8dp hover:bg-border-subtle/30 transition-all duration-200 fade-in-up stagger-${index + 1} group`}
-                  >
+                {assistants.slice(0, 3).map((assistant: any) => (
+                  <div key={assistant.id} className="flex items-center justify-between p-3 bg-bg-dark rounded-8dp">
                     <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-success-green rounded-full live-indicator"></div>
-                      <span className="text-text-primary text-sm font-medium group-hover:text-primary-blue transition-colors duration-200">
-                        {assistant.name}
-                      </span>
+                      <div className="w-2 h-2 bg-success-green rounded-full"></div>
+                      <span className="text-text-primary text-sm">{assistant.name}</span>
                     </div>
-                    <span className="text-text-secondary text-xs px-2 py-1 bg-success-green/10 text-success-green rounded-full">
-                      {assistant.status}
-                    </span>
+                    <span className="text-text-secondary text-xs">{assistant.status}</span>
                   </div>
                 ))}
                 {assistants.length > 3 && (
-                  <p className="text-text-secondary text-sm text-center pt-2 fade-in-up-delay">
+                  <p className="text-text-secondary text-sm text-center pt-2">
                     +{assistants.length - 3} more assistants
                   </p>
                 )}

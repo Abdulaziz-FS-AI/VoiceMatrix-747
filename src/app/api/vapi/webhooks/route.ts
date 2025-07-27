@@ -54,15 +54,27 @@ async function handleCallStarted(supabase: any, data: any) {
       .single()
 
     if (assistant) {
+      const now = new Date()
+      const callData = {
+        assistant_id: assistant.id,
+        phone_number: data.customer?.number || 'Unknown',
+        vapi_call_id: data.call.id,
+        status: 'active', // Call is starting
+        duration: 0,
+        // Enhanced analytics data
+        metadata: {
+          timeOfDay: now.getHours(),
+          dayOfWeek: now.getDay(),
+          startTimestamp: data.timestamp || now.toISOString(),
+          customerNumber: data.customer?.number,
+          assistantId: data.call.assistantId
+        },
+        created_at: now.toISOString()
+      }
+
       await supabase
         .from('call_logs')
-        .insert({
-          assistant_id: assistant.id,
-          phone_number: data.customer?.number || 'Unknown',
-          vapi_call_id: data.call.id,
-          status: 'completed', // Using available status from simplified schema
-          created_at: new Date().toISOString()
-        })
+        .insert(callData)
     }
   } catch (error) {
     console.error('Failed to handle call started:', error)
@@ -71,19 +83,97 @@ async function handleCallStarted(supabase: any, data: any) {
 
 async function handleCallEnded(supabase: any, data: any) {
   try {
+    const endReason = data.endedReason || 'unknown'
+    const duration = data.call?.duration || 0
+    const transcript = data.transcript || data.messages || []
+    
+    // Enhanced analytics calculation
+    const analyticsData = calculateCallAnalytics(data, transcript, duration)
+    
     await supabase
       .from('call_logs')
       .update({
-        duration: data.call?.duration || 0,
-        transcript: JSON.stringify(data.transcript || data.messages || []),
-        summary: data.summary || `Call ended: ${data.endedReason || 'unknown'}`,
-        status: data.endedReason === 'customer-ended-call' ? 'completed' : 'failed',
-        lead_captured: false // Default value
+        duration,
+        transcript: JSON.stringify(transcript),
+        summary: data.summary || `Call ended: ${endReason}`,
+        status: getCallStatus(endReason),
+        lead_captured: analyticsData.leadCaptured,
+        // Enhanced analytics fields stored in metadata
+        metadata: {
+          ...analyticsData,
+          endReason,
+          endTimestamp: data.timestamp || new Date().toISOString()
+        }
       })
       .eq('vapi_call_id', data.call?.id)
   } catch (error) {
     console.error('Failed to handle call ended:', error)
   }
+}
+
+function getCallStatus(endReason: string): string {
+  const statusMap: Record<string, string> = {
+    'customer-ended-call': 'completed',
+    'assistant-ended-call': 'completed',
+    'call-transferred': 'completed',
+    'customer-did-not-give-microphone-permission': 'failed',
+    'voicemail': 'failed',
+    'assistant-not-responding': 'failed',
+    'exceeded-max-duration': 'completed',
+    'silence-timeout': 'failed'
+  }
+  
+  return statusMap[endReason] || 'failed'
+}
+
+function calculateCallAnalytics(data: any, transcript: any[], duration: number) {
+  // Analyze transcript for business intelligence
+  const transcriptText = Array.isArray(transcript) 
+    ? transcript.map(t => t.text || t.content || '').join(' ').toLowerCase()
+    : String(transcript).toLowerCase()
+  
+  // Lead scoring keywords
+  const leadKeywords = ['interested', 'appointment', 'schedule', 'meeting', 'quote', 'price', 'cost', 'buy', 'purchase', 'contact']
+  const appointmentKeywords = ['book', 'schedule', 'appointment', 'meeting', 'time', 'date', 'available']
+  const qualifiedKeywords = ['budget', 'decision', 'timeline', 'authority', 'need']
+  
+  const leadScore = leadKeywords.filter(keyword => transcriptText.includes(keyword)).length
+  const appointmentScore = appointmentKeywords.filter(keyword => transcriptText.includes(keyword)).length
+  const qualificationScore = qualifiedKeywords.filter(keyword => transcriptText.includes(keyword)).length
+  
+  return {
+    leadCaptured: leadScore >= 2 || appointmentScore >= 1,
+    appointmentBooked: appointmentScore >= 2,
+    salesQualified: qualificationScore >= 2,
+    leadScore: Math.min(leadScore * 10, 100),
+    sentimentScore: analyzeSentiment(transcriptText),
+    keywordsMatched: leadScore + appointmentScore + qualificationScore,
+    callQuality: duration > 30 ? 'good' : duration > 10 ? 'fair' : 'poor',
+    resolutionType: determineResolutionType(transcriptText, data.endedReason)
+  }
+}
+
+function analyzeSentiment(text: string): number {
+  // Simple sentiment analysis
+  const positiveWords = ['happy', 'good', 'great', 'excellent', 'satisfied', 'thank', 'thanks', 'helpful', 'perfect']
+  const negativeWords = ['bad', 'terrible', 'awful', 'disappointed', 'frustrated', 'angry', 'unhappy', 'problem']
+  
+  const positiveCount = positiveWords.filter(word => text.includes(word)).length
+  const negativeCount = negativeWords.filter(word => text.includes(word)).length
+  
+  // Return score from -1 to 1
+  const totalWords = positiveCount + negativeCount
+  if (totalWords === 0) return 0
+  
+  return (positiveCount - negativeCount) / totalWords
+}
+
+function determineResolutionType(text: string, endReason: string): string {
+  if (text.includes('transfer') || endReason === 'call-transferred') return 'transferred'
+  if (text.includes('schedule') || text.includes('appointment')) return 'appointment'
+  if (text.includes('information') || text.includes('answer')) return 'information'
+  if (text.includes('callback') || text.includes('call back')) return 'callback'
+  return 'general'
 }
 
 async function handleTranscript(supabase: any, data: any) {

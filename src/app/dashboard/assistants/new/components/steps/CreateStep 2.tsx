@@ -215,7 +215,7 @@ export function CreateStep() {
   const retry = () => {
     setStatus('idle')
     setSteps([])
-    setError('')
+    setError(undefined)
   }
 
   // Calculate estimated cost on mount
@@ -427,7 +427,7 @@ export function CreateStep() {
         <div className="flex justify-center">
           <button
             onClick={createAssistant}
-            disabled={status !== 'idle'}
+            disabled={status === 'creating'}
             className="px-8 py-3 bg-green-600 text-white text-lg font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
           >
             Create AI Assistant

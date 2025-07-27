@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = cookies()
@@ -18,7 +18,7 @@ export async function POST(
     }
 
     const { pairs } = await request.json()
-    const assistantId = params.id
+    const { id: assistantId } = await params
 
     // Verify the assistant belongs to the user
     const { data: assistant, error: assistantError } = await supabase

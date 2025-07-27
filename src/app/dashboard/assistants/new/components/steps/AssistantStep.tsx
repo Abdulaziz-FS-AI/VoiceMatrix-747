@@ -63,6 +63,8 @@ export function AssistantStep() {
   const handlePersonalityChange = (field: 'tone' | 'traits', value: any) => {
     updateAssistantConfig({
       personality: {
+        tone: assistantConfig.personality?.tone || 'professional',
+        traits: assistantConfig.personality?.traits || [],
         ...assistantConfig.personality,
         [field]: value
       }

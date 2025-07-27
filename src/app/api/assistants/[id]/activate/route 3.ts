@@ -5,7 +5,7 @@ import { VapiClient, generateSystemPrompt, getFirstMessage, getAdvancedFunctions
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const cookieStore = cookies()
@@ -18,7 +18,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id: assistantId } = await params
+    const assistantId = params.id
 
     // Get assistant info
     const { data: assistant, error: assistantError } = await supabase
@@ -113,9 +113,6 @@ export async function POST(
     
     // Update assistant status to error
     try {
-      const { id: assistantId } = await params
-      const cookieStore = cookies()
-      const supabase = createServerComponentClient(cookieStore)
       await supabase
         .from('assistants')
         .update({ status: 'error' })
