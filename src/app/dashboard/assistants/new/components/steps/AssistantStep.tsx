@@ -50,13 +50,20 @@ const PERSONALITY_TRAITS = [
 ]
 
 export function AssistantStep() {
-  const { assistantConfig, updateAssistantConfig, markStepCompleted, businessInfo } = useWizardStore()
+  const { assistantConfig, updateAssistantConfig, markStepCompleted, businessInfo, updateBusinessInfo } = useWizardStore()
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleInputChange = (field: string, value: any) => {
     updateAssistantConfig({ [field]: value })
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
+    }
+  }
+
+  const handleBusinessNameChange = (value: string) => {
+    updateBusinessInfo({ name: value })
+    if (errors.businessName) {
+      setErrors(prev => ({ ...prev, businessName: '' }))
     }
   }
 
@@ -81,7 +88,7 @@ export function AssistantStep() {
   }
 
   const generateGreeting = () => {
-    const businessName = businessInfo.name
+    const businessName = businessInfo.name || 'our business'
     const persona = assistantConfig.persona
     
     const greetings = {
@@ -121,7 +128,7 @@ export function AssistantStep() {
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
-      markStepCompleted(2)
+      markStepCompleted(1)
       return true
     }
     
@@ -136,6 +143,24 @@ export function AssistantStep() {
         </h2>
         <p className="text-gray-600">
           Configure your AI assistant's personality and behavior.
+        </p>
+      </div>
+
+      {/* Business Name (Optional) */}
+      <div>
+        <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
+          Business Name (Optional)
+        </label>
+        <input
+          type="text"
+          id="businessName"
+          value={businessInfo.name || ''}
+          onChange={(e) => handleBusinessNameChange(e.target.value)}
+          className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Your business name"
+        />
+        <p className="mt-1 text-sm text-gray-600">
+          Used in greetings and responses (can be added later)
         </p>
       </div>
 

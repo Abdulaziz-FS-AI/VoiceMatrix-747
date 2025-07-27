@@ -4,18 +4,16 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { WizardProvider } from './components/WizardProvider'
 import { WizardLayout } from './components/WizardLayout'
-import { BusinessStep } from './components/steps/BusinessStep'
 import { AssistantStep } from './components/steps/AssistantStep'
 import { KnowledgeStep } from './components/steps/KnowledgeStep'
 import { QAStep } from './components/steps/QAStep'
 import { CreateStep } from './components/steps/CreateStep'
 
 const STEPS = [
-  { id: 1, title: 'Business Information', component: BusinessStep },
-  { id: 2, title: 'Assistant Configuration', component: AssistantStep },
-  { id: 3, title: 'Knowledge Base', component: KnowledgeStep },
-  { id: 4, title: 'Q&A Pairs', component: QAStep },
-  { id: 5, title: 'Create & Launch', component: CreateStep },
+  { id: 1, title: 'Assistant Configuration', component: AssistantStep },
+  { id: 2, title: 'Knowledge Base', component: KnowledgeStep },
+  { id: 3, title: 'Q&A Pairs', component: QAStep },
+  { id: 4, title: 'Create & Launch', component: CreateStep },
 ]
 
 export default function NewAssistantWizard() {
@@ -44,7 +42,7 @@ export default function NewAssistantWizard() {
               Create New AI Assistant
             </h1>
             <p className="text-gray-600">
-              Set up your AI receptionist in 5 simple steps
+              Set up your AI receptionist in 4 simple steps
             </p>
           </div>
 

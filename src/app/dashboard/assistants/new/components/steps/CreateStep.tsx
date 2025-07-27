@@ -54,14 +54,13 @@ export function CreateStep() {
 
   const initializeSteps = () => {
     const creationSteps: CreationStep[] = [
-      { id: 'business', title: 'Creating business profile', status: 'pending' },
       { id: 'assistant', title: 'Setting up AI assistant', status: 'pending' },
       { id: 'vapi', title: 'Configuring voice AI', status: 'pending' },
       { id: 'phone', title: 'Getting phone number', status: 'pending' },
     ]
 
     if (knowledgeBase.trim()) {
-      creationSteps.splice(2, 0, { 
+      creationSteps.splice(1, 0, { 
         id: 'knowledge', 
         title: 'Processing knowledge base', 
         status: 'pending' 
@@ -89,26 +88,10 @@ export function CreateStep() {
     const creationSteps = initializeSteps()
     
     try {
-      // Step 1: Create business
-      updateStepStatus('business', 'running')
-      const businessResponse = await fetch('/api/businesses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(businessInfo)
-      })
-      
-      if (!businessResponse.ok) {
-        throw new Error('Failed to create business profile')
-      }
-      
-      const business = await businessResponse.json()
-      updateStepStatus('business', 'completed')
-
-      // Step 2: Create assistant record
+      // Step 1: Create assistant record directly
       updateStepStatus('assistant', 'running')
       const assistantData = {
         ...assistantConfig,
-        businessId: business.id,
         status: 'creating'
       }
       
@@ -125,7 +108,7 @@ export function CreateStep() {
       const assistant = await assistantResponse.json()
       updateStepStatus('assistant', 'completed')
 
-      // Step 3: Process knowledge base (if provided)
+      // Step 2: Process knowledge base (if provided)
       if (knowledgeBase.trim()) {
         updateStepStatus('knowledge', 'running')
         const knowledgeResponse = await fetch(`/api/assistants/${assistant.id}/knowledge-base`, {
@@ -142,7 +125,7 @@ export function CreateStep() {
         }
       }
 
-      // Step 4: Add Q&A pairs (if provided)
+      // Step 3: Add Q&A pairs (if provided)
       if (qaPairs.length > 0) {
         updateStepStatus('qa', 'running')
         const qaResponse = await fetch(`/api/assistants/${assistant.id}/qa-pairs`, {
@@ -159,7 +142,7 @@ export function CreateStep() {
         }
       }
 
-      // Step 5: Create Vapi assistant
+      // Step 4: Create Vapi assistant
       updateStepStatus('vapi', 'running')
       const vapiResponse = await fetch(`/api/assistants/${assistant.id}/activate`, {
         method: 'POST',
@@ -174,12 +157,12 @@ export function CreateStep() {
       const vapiResult = await vapiResponse.json()
       updateStepStatus('vapi', 'completed')
 
-      // Step 6: Get phone number
+      // Step 5: Get phone number
       updateStepStatus('phone', 'running')
       // This would be handled by the activate endpoint
       updateStepStatus('phone', 'completed')
 
-      // Step 7: Finalize
+      // Step 6: Finalize
       updateStepStatus('finalize', 'running')
       await new Promise(resolve => setTimeout(resolve, 1000)) // Brief pause for UX
       updateStepStatus('finalize', 'completed')
@@ -360,20 +343,23 @@ export function CreateStep() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-2">Business Information</h3>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p><strong>Name:</strong> {businessInfo.name}</p>
-              <p><strong>Industry:</strong> {businessInfo.industry}</p>
-              {businessInfo.website && <p><strong>Website:</strong> {businessInfo.website}</p>}
-            </div>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 mb-2">Assistant Configuration</h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p><strong>Name:</strong> {assistantConfig.name}</p>
               <p><strong>Persona:</strong> {assistantConfig.persona}</p>
               <p><strong>Transfer Number:</strong> {assistantConfig.transferPhoneNumber}</p>
+              {businessInfo.name && <p><strong>Business Name:</strong> {businessInfo.name}</p>}
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="font-medium text-gray-900 mb-2">Voice & Greeting</h3>
+            <div className="text-sm text-gray-600 space-y-1">
+              <p><strong>Voice:</strong> {assistantConfig.voiceId || 'Default (Rachel)'}</p>
+              <p><strong>Tone:</strong> {assistantConfig.personality?.tone || 'Professional'}</p>
+              {assistantConfig.greetingMessage && (
+                <p><strong>Greeting:</strong> {assistantConfig.greetingMessage.substring(0, 100)}...</p>
+              )}
             </div>
           </div>
         </div>

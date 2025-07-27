@@ -215,12 +215,10 @@ export const useWizardStore = create<WizardState & WizardActions>()(
           case 1:
             return true
           case 2:
-            return !!(state.businessInfo.name && state.businessInfo.industry)
-          case 3:
             return !!(state.assistantConfig.name && state.assistantConfig.persona && state.assistantConfig.transferPhoneNumber)
-          case 4:
+          case 3:
             return true // Knowledge base is optional
-          case 5:
+          case 4:
             return true // Q&A pairs are optional
           default:
             return false

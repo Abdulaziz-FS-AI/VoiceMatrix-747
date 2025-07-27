@@ -47,7 +47,7 @@ export function KnowledgeStep() {
   }
 
   const handleContinue = () => {
-    markStepCompleted(3)
+    markStepCompleted(2)
   }
 
   const generateSampleContent = () => {

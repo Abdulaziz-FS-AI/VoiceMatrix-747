@@ -51,7 +51,7 @@ export function QAStep() {
   }
 
   const handleContinue = () => {
-    markStepCompleted(4)
+    markStepCompleted(3)
   }
 
   return (
