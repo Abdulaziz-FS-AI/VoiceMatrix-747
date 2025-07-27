@@ -58,10 +58,10 @@ async function handleCallStarted(supabase: any, data: any) {
         .from('call_logs')
         .insert({
           assistant_id: assistant.id,
-          caller_number: data.customer?.number || 'Unknown',
-          start_time: new Date(data.timestamp).toISOString(),
+          phone_number: data.customer?.number || 'Unknown',
           vapi_call_id: data.call.id,
-          status: 'active'
+          status: 'completed', // Using available status from simplified schema
+          created_at: new Date().toISOString()
         })
     }
   } catch (error) {
@@ -74,13 +74,13 @@ async function handleCallEnded(supabase: any, data: any) {
     await supabase
       .from('call_logs')
       .update({
-        end_time: new Date(data.timestamp).toISOString(),
-        duration_seconds: data.call.duration,
-        transcript: data.transcript,
-        summary: data.summary,
-        status: data.endedReason === 'customer-ended-call' ? 'completed' : 'transferred'
+        duration: data.call?.duration || 0,
+        transcript: JSON.stringify(data.transcript || data.messages || []),
+        summary: data.summary || `Call ended: ${data.endedReason || 'unknown'}`,
+        status: data.endedReason === 'customer-ended-call' ? 'completed' : 'failed',
+        lead_captured: false // Default value
       })
-      .eq('vapi_call_id', data.call.id)
+      .eq('vapi_call_id', data.call?.id)
   } catch (error) {
     console.error('Failed to handle call ended:', error)
   }
@@ -92,9 +92,9 @@ async function handleTranscript(supabase: any, data: any) {
     await supabase
       .from('call_logs')
       .update({
-        transcript: data.transcript
+        transcript: JSON.stringify(data.transcript || data.messages || [])
       })
-      .eq('vapi_call_id', data.call.id)
+      .eq('vapi_call_id', data.call?.id)
   } catch (error) {
     console.error('Failed to handle transcript update:', error)
   }

@@ -42,10 +42,7 @@ async function searchKnowledgeBase(vapiAssistantId: string, query: string) {
     // Find assistant
     const { data: assistant } = await supabase
       .from('assistants')
-      .select(`
-        id,
-        qa_pairs(*)
-      `)
+      .select('id, user_id')
       .eq('vapi_assistant_id', vapiAssistantId)
       .single()
 
@@ -53,33 +50,53 @@ async function searchKnowledgeBase(vapiAssistantId: string, query: string) {
       return "I don't have access to that information."
     }
 
-    // Check Q&A pairs first (higher priority)
-    const qaMatch = findQAMatch(query, assistant.qa_pairs)
-    if (qaMatch) {
-      return qaMatch.answer
+    // Get user's business info from profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('business_info')
+      .eq('id', assistant.user_id)
+      .single()
+
+    // Check knowledge base
+    const { data: knowledgeData } = await supabase
+      .from('knowledge_base')
+      .select('content')
+      .eq('assistant_id', assistant.id)
+      .limit(5)
+
+    // Simple keyword search in knowledge base
+    if (knowledgeData && knowledgeData.length > 0) {
+      const queryWords = query.toLowerCase().split(/\s+/)
+      const relevantContent = knowledgeData
+        .filter(item => 
+          queryWords.some(word => 
+            item.content.toLowerCase().includes(word)
+          )
+        )
+        .map(item => item.content)
+        .slice(0, 3)
+
+      if (relevantContent.length > 0) {
+        return `Based on our information: ${relevantContent.join('\n\n')}`
+      }
     }
 
-    // Generate query embedding using OpenAI
-    const embedding = await generateEmbedding(query)
+    // Fallback to business info
+    const businessInfo = profile?.business_info
+    if (businessInfo) {
+      const businessContext = `
+Business Name: ${businessInfo.name || 'Our Business'}
+${businessInfo.address ? `Address: ${businessInfo.address}` : ''}
+${businessInfo.website ? `Website: ${businessInfo.website}` : ''}
+${businessInfo.hours_of_operation ? `Hours: ${JSON.stringify(businessInfo.hours_of_operation)}` : ''}
+      `.trim()
 
-    // Vector search using Supabase function
-    const { data: chunks, error } = await supabase.rpc('search_knowledge_chunks', {
-      assistant_id: assistant.id,
-      query_embedding: embedding,
-      match_threshold: 0.7,
-      match_count: 3
-    })
-
-    if (error || !chunks?.length) {
-      return "I don't have specific information about that. Let me transfer you to someone who can help."
+      if (queryWords.some(word => businessContext.toLowerCase().includes(word))) {
+        return businessContext
+      }
     }
 
-    // Format response from chunks
-    const context = chunks
-      .map((chunk: any) => chunk.content)
-      .join('\n\n')
-
-    return `Based on our information: ${context}`
+    return "I don't have specific information about that. Let me transfer you to someone who can help."
 
   } catch (error) {
     console.error('Knowledge search error:', error)
@@ -94,11 +111,11 @@ async function transferCall(vapiAssistantId: string, callId: string, reason: str
     // Find assistant and get transfer number
     const { data: assistant } = await supabase
       .from('assistants')
-      .select('transfer_phone_number')
+      .select('phone_number')
       .eq('vapi_assistant_id', vapiAssistantId)
       .single()
 
-    if (!assistant?.transfer_phone_number) {
+    if (!assistant?.phone_number) {
       return "I apologize, but I'm unable to transfer your call right now. Please call back later."
     }
 
@@ -114,7 +131,7 @@ async function transferCall(vapiAssistantId: string, callId: string, reason: str
     return {
       result: `Transferring your call now. Please hold while I connect you.`,
       transfer: {
-        phoneNumber: assistant.transfer_phone_number,
+        phoneNumber: assistant.phone_number,
         reason: reason
       }
     }
@@ -144,32 +161,4 @@ async function generateEmbedding(text: string): Promise<number[]> {
 
   const data = await response.json()
   return data.data[0].embedding
-}
-
-function findQAMatch(query: string, qaPairs: any[]) {
-  const normalizedQuery = query.toLowerCase().trim()
-  
-  return qaPairs
-    .sort((a, b) => b.priority - a.priority)
-    .find(qa => {
-      const normalizedQuestion = qa.question.toLowerCase().trim()
-      
-      // Exact match
-      if (normalizedQuery === normalizedQuestion) {
-        return true
-      }
-      
-      // Contains match
-      if (normalizedQuery.includes(normalizedQuestion) || 
-          normalizedQuestion.includes(normalizedQuery)) {
-        return true
-      }
-      
-      // Keyword overlap
-      const queryWords = normalizedQuery.split(/\s+/).filter((w: string) => w.length > 3)
-      const questionWords = normalizedQuestion.split(/\s+/).filter((w: string) => w.length > 3)
-      const overlap = queryWords.filter(word => questionWords.includes(word)).length
-      
-      return overlap >= Math.min(queryWords.length, questionWords.length) * 0.6
-    })
 }
